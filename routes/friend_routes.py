@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, session, render_template, flash
-from models import db, Friend
+from extensions import db
+from models import Friend
 
 friend_bp = Blueprint('friend', __name__)
 

@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, session, render_template, flash
-from models import db, TravelGroup, GroupInvitation, Friend
+from models import TravelGroup, GroupInvitation, Friend
+from extensions import db
 import datetime
 import os
 from werkzeug.utils import secure_filename

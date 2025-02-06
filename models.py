@@ -1,7 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 import datetime
-
-db = SQLAlchemy()
 
 # フレンドテーブルのモデル
 class Friend(db.Model):
@@ -29,3 +27,10 @@ class GroupInvitation(db.Model):
     group_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     invited_email = db.Column(db.String(100), nullable=False)
     status = db.Column(db.String(20), nullable=False, default='pending')  # pending, accepted, rejected
+
+# チャットメッセージのモデル
+class ChatMessage(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
