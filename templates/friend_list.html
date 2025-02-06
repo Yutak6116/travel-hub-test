@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>フレンドリスト</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <!-- ナビゲーションバー -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="#">旅プランナー</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('travels') }}">旅行予定一覧</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('group_creation') }}"
+              >グループ作成</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <h1 class="mb-4">フレンドリスト</h1>
+
+      <!-- フレンド追加ボタン (モーダル表示) -->
+      <button
+        type="button"
+        class="btn btn-success mb-4"
+        data-toggle="modal"
+        data-target="#addFriendModal"
+      >
+        フレンド追加
+      </button>
+
+      {% if friends %}
+      <ul class="list-group">
+        {% for friend in friends %}
+        <li
+          class="list-group-item d-flex justify-content-between align-items-center"
+        >
+          <span id="friend-{{ friend.id }}-name"
+            >{{ friend.friend_name }} ({{ friend.friend_email }})</span
+          >
+          <!-- 編集ボタン -->
+          <button
+            type="button"
+            class="btn btn-sm btn-primary"
+            data-toggle="modal"
+            data-target="#editModal"
+            data-friend-id="{{ friend.id }}"
+            data-friend-name="{{ friend.friend_name }}"
+          >
+            編集
+          </button>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p>登録されているフレンドはいません。</p>
+      {% endif %}
+    </div>
+
+    <!-- フレンド編集モーダル -->
+    <div
+      class="modal fade"
+      id="editModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="editModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <form method="POST" id="updateFriendForm" action="">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="editModalLabel">
+                フレンド表示名の編集
+              </h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="閉じる"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="friendNameInput">新しい表示名</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  name="friend_name"
+                  id="friendNameInput"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                キャンセル
+              </button>
+              <button type="submit" class="btn btn-primary">更新</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- フレンド追加モーダル -->
+    <div
+      class="modal fade"
+      id="addFriendModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="addFriendModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <form
+          method="POST"
+          id="addFriendForm"
+          action="{{ url_for('add_friend') }}"
+        >
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addFriendModalLabel">フレンド追加</h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="閉じる"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-group">
+                <label for="addFriendEmail">メールアドレス</label>
+                <input
+                  type="email"
+                  class="form-control"
+                  id="addFriendEmail"
+                  name="friend_email"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="addFriendName">表示名</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="addFriendName"
+                  name="friend_name"
+                  required
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-dismiss="modal"
+              >
+                キャンセル
+              </button>
+              <button type="submit" class="btn btn-success">追加</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // 編集モーダルの設定
+      $("#editModal").on("show.bs.modal", function (event) {
+        var button = $(event.relatedTarget);
+        var friendId = button.data("friend-id");
+        var friendName = button.data("friend-name");
+        var modal = $(this);
+        modal.find("#friendNameInput").val(friendName);
+        modal
+          .find("#updateFriendForm")
+          .attr("action", "/update_friend/" + friendId);
+      });
+    </script>
+  </body>
+</html>

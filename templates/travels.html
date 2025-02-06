@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>旅行予定一覧</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <a class="navbar-brand" href="{{ url_for('travels') }}">旅プランナー</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('group_creation') }}"
+              >グループ作成</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('friend_list') }}"
+              >フレンドリスト</a
+            >
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{{ url_for('logout') }}">ログアウト</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+
+    <div class="container mt-4">
+      <h1 class="mb-4">旅行予定一覧</h1>
+
+      {% if travels %}
+      <div class="list-group">
+        {% for travel in travels %}
+        <a href="#" class="list-group-item list-group-item-action">
+          {{ travel.title }}
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p>旅行予定がありません。</p>
+      {% endif %}
+
+      <hr />
+      <!-- 参加待ち一覧 -->
+      <h2>参加待ち一覧</h2>
+      {% if invitations %}
+      <div class="list-group">
+        {% for invite in invitations %}
+        <a
+          href="#"
+          class="list-group-item list-group-item-warning"
+          data-toggle="modal"
+          data-target="#invitationModal"
+          data-invite-id="{{ invite.id }}"
+          data-group-title="{{ invite.group_id | get_group_title }}"
+        >
+          {{ invite.group_id | get_group_title }}（参加待ち）
+          <br />
+          <small>招待者: {{ invite.group_id | get_inviter_info }}</small>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p>参加待ちのグループはありません。</p>
+      {% endif %}
+    </div>
+
+    <!-- 招待対応モーダル -->
+    <div
+      class="modal fade"
+      id="invitationModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="invitationModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <form method="POST" id="handleInvitationForm" action="">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="invitationModalLabel">
+                グループ招待の対応
+              </h5>
+              <button
+                type="button"
+                class="close"
+                data-dismiss="modal"
+                aria-label="閉じる"
+              >
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p id="invitationInfo">このグループに参加しますか？</p>
+            </div>
+            <div class="modal-footer">
+              <button
+                type="submit"
+                name="action"
+                value="reject"
+                class="btn btn-danger"
+              >
+                拒否
+              </button>
+              <button
+                type="submit"
+                name="action"
+                value="accept"
+                class="btn btn-success"
+              >
+                承諾
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      // モーダル表示時に、データ属性から情報をセットする
+      $("#invitationModal").on("show.bs.modal", function (event) {
+        var button = $(event.relatedTarget);
+        var inviteId = button.data("invite-id");
+        var groupTitle = button.data("group-title");
+        var modal = $(this);
+        modal
+          .find("#invitationInfo")
+          .text("「" + groupTitle + "」に参加しますか？");
+        modal
+          .find("#handleInvitationForm")
+          .attr("action", "/handle_invitation/" + inviteId);
+      });
+    </script>
+  </body>
+</html>
