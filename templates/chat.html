@@ -70,7 +70,7 @@
         <div
           class="message {% if msg.username == user.name %}user{% else %}other{% endif %}"
         >
-          {{ msg.username }}: {{ msg.message }}
+          {{ msg.username }}: {{ msg.message | safe }}
         </div>
         {% endfor %}
       </div>
@@ -121,7 +121,7 @@
         } else {
           messageElem.classList.add("other");
         }
-        messageElem.textContent = data.user + ": " + data.message;
+        messageElem.innerHTML = data.user + ": " + data.message;
         chatBox.appendChild(messageElem);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
