@@ -27,4 +27,4 @@ if __name__ == '__main__':
     with app.app_context():
         db.drop_all()  # 既存のテーブルを削除
         db.create_all()  # 新しいスキーマでテーブル作成
-    socketio.run(app, debug=True)
+    socketio.run(app, host="0.0.0.0", port=8000, debug=True)
