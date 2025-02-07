@@ -35,11 +35,24 @@ class ChatMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
 
-# 旅行プランのモデル
+# 旅行プランのテキストモデル
 class TravelPlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     markdown = db.Column(db.Text, nullable=False)
+
+# 旅行プランのモデル
+class TravelPlanItem(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
+    title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    location = db.Column(db.String(100), nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+
     
 # 全候補地のモデル
 
