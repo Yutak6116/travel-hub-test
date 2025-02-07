@@ -30,24 +30,24 @@ class GroupInvitation(db.Model):
 
 # チャットメッセージのモデル
 class ChatMessage(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
-
+    
 # 旅行プランのテキストモデル
 class TravelPlan(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     markdown = db.Column(db.Text, nullable=False)
-
+    
 # 実際に行く旅行プランのモデル
 class TravelPlanItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     place_name = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text, nullable=True)
-    date = db.Column(db.Date, nullable=True)    # その場所に行く日付
+    date = db.Column(db.Integer, nullable=True)    # その場所に行く（何日目）
     place_id = db.Column(db.String(255), nullable=True) # place_idは、services/place_services.pyのget_place_coordinates関数で取得する(引数は行く場所名)
     comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
     rating = db.Column(db.Integer, nullable=False)  #いいね数
@@ -59,7 +59,7 @@ class TravelPlanItem(db.Model):
     
 # 全候補地のモデル
 class AllTravelPlanItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     place_name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
@@ -73,7 +73,7 @@ class AllTravelPlanItem(db.Model):
 # 削除した候補地
 
 class DeletedTravelPlanItem(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     place_name = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text, nullable=True)
@@ -83,7 +83,7 @@ class DeletedTravelPlanItem(db.Model):
     # Google Places APIのplace_idを保存するカラム
 
 class PlaceComment(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     place_id = db.Column(db.String(255), nullable=False)
     user_email = db.Column(db.String(100), nullable=False)
     comment = db.Column(db.Text, nullable=False)
