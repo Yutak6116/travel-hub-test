@@ -88,7 +88,8 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
-
+      <div class="mt-3">
+  
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
         <!-- 日程を開始日・終了日に分割 -->
@@ -101,10 +102,14 @@
         <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
       </div>
 
-      <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
-        >旅行一覧へ</a
-      >
-      <a href="/logout" class="btn btn-secondary mt-3">ログアウト</a>
+      <a href="{{ url_for('group.travels') }}" class="btn btn-secondary"
+          >旅行一覧へ</a
+        >
+        <a href="{{ url_for('plan.show_map', room_id=room.id) }}" class="btn btn-primary"
+          >地図を表示</a
+        >
+        <a href="/logout" class="btn btn-secondary">ログアウト</a>
+      </div>
     </div>
     <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
     <div class="container mt-4">

@@ -15,6 +15,7 @@ from routes.oauth_routes import oauth_bp
 from routes.group_routes import group_bp
 from routes.friend_routes import friend_bp
 from routes.chat_routes import chat_bp
+from routes.map_routes import plan_bp
 from routes.plan_routes import plan_bp
 
 app.register_blueprint(oauth_bp)
