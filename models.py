@@ -34,3 +34,9 @@ class ChatMessage(db.Model):
     username = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
+
+# 旅行プランのモデル
+class TravelPlan(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
+    markdown = db.Column(db.Text, nullable=False)

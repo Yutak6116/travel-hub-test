@@ -8,7 +8,10 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+    />
     <style>
       body {
         background-color: #f7f7f7;
@@ -71,7 +74,7 @@
         <div
           class="message {% if msg.username == user.name %}user{% else %}other{% endif %}"
         >
-          {{ msg.username }}: {{ msg.message }}
+          {{ msg.username }}: {{ msg.message | safe }}
         </div>
         {% endfor %}
       </div>
@@ -102,7 +105,12 @@
             <!-- 項目がここに追加されます -->
           </ul>
           <div class="input-group mt-2">
-            <input id="overviewInput" type="text" class="form-control" placeholder="新しい概要を入力">
+            <input
+              id="overviewInput"
+              type="text"
+              class="form-control"
+              placeholder="新しい概要を入力"
+            />
             <button id="addOverview" class="btn btn-secondary">追加</button>
           </div>
         </div>
@@ -113,7 +121,12 @@
             <!-- 項目がここに追加されます -->
           </ul>
           <div class="input-group mt-2">
-            <input id="planInput" type="text" class="form-control" placeholder="新しい旅行プランを入力">
+            <input
+              id="planInput"
+              type="text"
+              class="form-control"
+              placeholder="新しい旅行プランを入力"
+            />
             <button id="addPlan" class="btn btn-secondary">追加</button>
           </div>
         </div>
@@ -124,7 +137,12 @@
             <!-- 項目がここに追加されます -->
           </ul>
           <div class="input-group mt-2">
-            <input id="costInput" type="text" class="form-control" placeholder="新しい費用を入力">
+            <input
+              id="costInput"
+              type="text"
+              class="form-control"
+              placeholder="新しい費用を入力"
+            />
             <button id="addCost" class="btn btn-secondary">追加</button>
           </div>
         </div>
@@ -182,10 +200,10 @@
       function updateTravelPlanList(markdownText) {
         // 例として、行頭が "-" または "*" で始まる行を項目とみなす
         const lines = markdownText.split("\n");
-        const items = lines.filter(line => line.trim().match(/^(\-|\*)\s+/));
+        const items = lines.filter((line) => line.trim().match(/^(\-|\*)\s+/));
         const list = document.getElementById("travelPlanList");
         list.innerHTML = ""; // 既存のリストをクリア
-        items.forEach(function(item) {
+        items.forEach(function (item) {
           // 行頭のマーカーとスペースを除去
           const text = item.replace(/^(\-|\*)\s+/, "").trim();
           const li = document.createElement("li");
@@ -199,20 +217,26 @@
       }
 
       // 保存ボタンのクリック処理（例：現在のリスト順をサーバーへ送信する等）
-      document.getElementById('saveTravelPlan').addEventListener('click', function() {
-        let items = [];
-        $("#travelPlanList li").each(function() {
-          items.push($(this).text());
+      document
+        .getElementById("saveTravelPlan")
+        .addEventListener("click", function () {
+          let items = [];
+          $("#travelPlanList li").each(function () {
+            items.push($(this).text());
+          });
+          // AJAX送信例（必要に応じて実装）
+          alert(
+            "旅行プラン（順序付き）が保存されました。\n" + items.join("\n")
+          );
         });
-        // AJAX送信例（必要に応じて実装）
-        alert("旅行プラン（順序付き）が保存されました。\n" + items.join("\n"));
-      });
 
       // 関数：指定したulの各liに削除ボタンを付与
       function addDeleteButton(listSelector) {
-        $(listSelector + " li").each(function() {
+        $(listSelector + " li").each(function () {
           if ($(this).find(".delete-btn").length === 0) {
-            $(this).append(' <button class="btn btn-danger btn-sm float-end delete-btn">×</button>');
+            $(this).append(
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button>'
+            );
           }
         });
       }
@@ -222,29 +246,41 @@
       $(".sortable").disableSelection();
 
       // 各項目の削除処理
-      $(document).on("click", ".delete-btn", function() {
+      $(document).on("click", ".delete-btn", function () {
         $(this).closest("li").remove();
       });
 
       // 新規追加ボタンの処理
-      $("#addOverview").click(function() {
+      $("#addOverview").click(function () {
         const text = $("#overviewInput").val().trim();
-        if(text !== ""){
-          $("#overviewList").append('<li class="list-group-item">' + text + ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>');
+        if (text !== "") {
+          $("#overviewList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
           $("#overviewInput").val("");
         }
       });
-      $("#addPlan").click(function() {
+      $("#addPlan").click(function () {
         const text = $("#planInput").val().trim();
-        if(text !== ""){
-          $("#planList").append('<li class="list-group-item">' + text + ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>');
+        if (text !== "") {
+          $("#planList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
           $("#planInput").val("");
         }
       });
-      $("#addCost").click(function() {
+      $("#addCost").click(function () {
         const text = $("#costInput").val().trim();
-        if(text !== ""){
-          $("#costList").append('<li class="list-group-item">' + text + ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>');
+        if (text !== "") {
+          $("#costList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
           $("#costInput").val("");
         }
       });
@@ -255,13 +291,13 @@
         const sections = { overview: [], plan: [], cost: [] };
         let currentSection = null;
         const lines = markdownText.split("\n");
-        lines.forEach(line => {
+        lines.forEach((line) => {
           // 見出しによりセクション切替
-          if(line.includes("**概要**")) {
+          if (line.includes("**概要**")) {
             currentSection = "overview";
-          } else if(line.includes("**旅行プラン**")) {
+          } else if (line.includes("**旅行プラン**")) {
             currentSection = "plan";
-          } else if(currentSection && line.trim().match(/^(\-|\*)\s+/)) {
+          } else if (currentSection && line.trim().match(/^(\-|\*)\s+/)) {
             const item = line.replace(/^(\-|\*)\s+/, "").trim();
             sections[currentSection].push(item);
           }
@@ -276,8 +312,12 @@
       function updateList(selector, items) {
         const list = $(selector);
         list.empty();
-        items.forEach(function(item) {
-          list.append('<li class="list-group-item">' + item + ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>');
+        items.forEach(function (item) {
+          list.append(
+            '<li class="list-group-item">' +
+              item +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
         });
         // ソート可能処理の再設定
         $(selector).sortable();
@@ -290,14 +330,31 @@
       }
 
       // 保存ボタンのクリック処理（例：現在のリスト順をサーバーへ送信する等）
-      $("#saveTravelPlan").click(function() {
-        let overviewItems = $("#overviewList li").map(function(){ return $(this).clone().children().remove().end().text().trim(); }).get();
-        let planItems = $("#planList li").map(function(){ return $(this).clone().children().remove().end().text().trim(); }).get();
-        let costItems = $("#costList li").map(function(){ return $(this).clone().children().remove().end().text().trim(); }).get();
+      $("#saveTravelPlan").click(function () {
+        let overviewItems = $("#overviewList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
+        let planItems = $("#planList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
+        let costItems = $("#costList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
         // AJAX送信例（必要に応じて実装）
-        alert("保存されました。\n概要:\n" + overviewItems.join("\n") +
-              "\n\n旅行プラン:\n" + planItems.join("\n") +
-              "\n\n費用:\n" + costItems.join("\n"));
+        alert(
+          "保存されました。\n概要:\n" +
+            overviewItems.join("\n") +
+            "\n\n旅行プラン:\n" +
+            planItems.join("\n") +
+            "\n\n費用:\n" +
+            costItems.join("\n")
+        );
       });
 
       // 既存のsocket.on("receive_message")処理内で、@AIからの旅行プラン情報の場合に利用
@@ -318,6 +375,15 @@
       //     handleTravelPlanMarkdown(data.message);
       //   }
       // });
+    </script>
+    <script>
+      // 画面読み込み時にDBから取得した旅行プランがあればパース
+      window.addEventListener("load", function () {
+        var travelPlanMarkdown = {{ travel_plan_markdown|tojson|safe }};
+        if (travelPlanMarkdown) {
+          handleTravelPlanMarkdown(travelPlanMarkdown);
+        }
+      });
     </script>
   </body>
 </html>
