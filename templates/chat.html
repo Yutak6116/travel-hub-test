@@ -88,12 +88,24 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
+
+      <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
+      <div class="input-group mt-4">
+        <!-- 日程を開始日・終了日に分割 -->
+        <input id="aiStartDate" type="text" class="form-control" placeholder="開始日（例: 2023-10-31）" />
+        <input id="aiEndDate" type="text" class="form-control" placeholder="終了日（例: 2023-11-05）" />
+        <input id="aiDeparture" type="text" class="form-control" placeholder="出発場所" />
+        <input id="aiDestination" type="text" class="form-control" placeholder="目標場所" />
+        <input id="aiCost" type="text" class="form-control" placeholder="金額" />
+        <input id="aiNote" type="text" class="form-control" placeholder="備考" />
+        <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
+      </div>
+
       <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
         >旅行一覧へ</a
       >
       <a href="/logout" class="btn btn-secondary mt-3">ログアウト</a>
     </div>
-
     <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
     <div class="container mt-4">
       <h2>旅行プラン</h2>
@@ -178,24 +190,24 @@
         messageInput.value = "";
       });
 
-      socket.on("receive_message", function (data) {
-        const messageElem = document.createElement("div");
-        messageElem.classList.add("message");
-        if (data.user === userName) {
-          messageElem.classList.add("user");
-        } else {
-          messageElem.classList.add("other");
-        }
-        // MarkdownをHTMLに変換して表示
-        messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
-        chatBox.appendChild(messageElem);
-        chatBox.scrollTop = chatBox.scrollHeight;
+      // socket.on("receive_message", function (data) {
+      //   const messageElem = document.createElement("div");
+      //   messageElem.classList.add("message");
+      //   if (data.user === userName) {
+      //     messageElem.classList.add("user");
+      //   } else {
+      //     messageElem.classList.add("other");
+      //   }
+      //   // MarkdownをHTMLに変換して表示
+      //   messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
+      //   chatBox.appendChild(messageElem);
+      //   chatBox.scrollTop = chatBox.scrollHeight;
 
-        // @AIからの旅行プランMarkdownを自動で3セクションに反映
-        if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
-          handleTravelPlanMarkdown(data.message);
-        }
-      });
+      //   // @AIからの旅行プランMarkdownを自動で3セクションに反映
+      //   if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
+      //     handleTravelPlanMarkdown(data.message);
+      //   }
+      // });
 
       // 旅行プランのMarkdownからリスト項目を抽出し、ドラッグアンドドロップリストに反映する関数
       function updateTravelPlanList(markdownText) {
@@ -359,23 +371,60 @@
       });
 
       // 既存のsocket.on("receive_message")処理内で、@AIからの旅行プラン情報の場合に利用
-      // socket.on("receive_message", function (data) {
-      //   const messageElem = document.createElement("div");
-      //   messageElem.classList.add("message");
-      //   if (data.user === userName) {
-      //     messageElem.classList.add("user");
-      //   } else {
-      //     messageElem.classList.add("other");
-      //   }
-      //   messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
-      //   chatBox.appendChild(messageElem);
-      //   chatBox.scrollTop = chatBox.scrollHeight;
+      socket.on("receive_message", function (data) {
+        const messageElem = document.createElement("div");
+        messageElem.classList.add("message");
+        if (data.user === userName) {
+          messageElem.classList.add("user");
+        } else {
+          messageElem.classList.add("other");
+        }
+        messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
+        chatBox.appendChild(messageElem);
+        chatBox.scrollTop = chatBox.scrollHeight;
 
-      //   // AIからの旅行プランMarkdownを自動で3セクションに反映
-      //   if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
-      //     handleTravelPlanMarkdown(data.message);
-      //   }
-      // });
+        // AIからの旅行プランMarkdownを自動で3セクションに反映
+        if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
+          handleTravelPlanMarkdown(data.message);
+        }
+      });
+
+      // 簡単AI呼び出し用のイベントリスナー（送信者は現在のユーザーとし、メッセージ先頭に"@AI"を付与）
+      document.getElementById("aiCallBtn").addEventListener("click", function () {
+        const startDate = document.getElementById("aiStartDate").value.trim();
+        const endDate = document.getElementById("aiEndDate").value.trim();
+        const departure = document.getElementById("aiDeparture").value.trim();
+        const destination = document.getElementById("aiDestination").value.trim();
+        const cost = document.getElementById("aiCost").value.trim();
+        const note = document.getElementById("aiNote").value.trim();
+        if (!startDate && !endDate && !departure && !destination && !cost && !note) return;
+        
+        const dateText = startDate && endDate ? startDate + " ～ " + endDate : startDate || endDate;
+        const aiMessage = "@AI AI呼び出し要求:\n日程: " + dateText +
+                          "\n出発場所: " + departure +
+                          "\n目標場所: " + destination +
+                          "\n金額: " + cost +
+                          "\n備考: " + note;
+        socket.emit("send_message", {
+          user: userName,
+          message: aiMessage,
+          room: room,
+        });
+        
+        // 入力欄をクリア
+        document.getElementById("aiStartDate").value = "";
+        document.getElementById("aiEndDate").value = "";
+        document.getElementById("aiDeparture").value = "";
+        document.getElementById("aiDestination").value = "";
+        document.getElementById("aiCost").value = "";
+        document.getElementById("aiNote").value = "";
+      });
+
+      // jQuery UI datepicker の有効化
+      $(function(){
+        $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
+        $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+      });
     </script>
     <script>
       // 画面読み込み時にDBから取得した旅行プランがあればパース
