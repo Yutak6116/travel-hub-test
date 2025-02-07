@@ -40,3 +40,10 @@ class TravelPlan(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     markdown = db.Column(db.Text, nullable=False)
+    
+# 全候補地のモデル
+
+
+# 削除した候補地
+
+
