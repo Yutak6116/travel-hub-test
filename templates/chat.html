@@ -88,10 +88,15 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
-      <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
-        >旅行一覧へ</a
-      >
-      <a href="/logout" class="btn btn-secondary mt-3">ログアウト</a>
+      <div class="mt-3">
+        <a href="{{ url_for('group.travels') }}" class="btn btn-secondary"
+          >旅行一覧へ</a
+        >
+        <a href="{{ url_for('plan.show_map', room_id=room.id) }}" class="btn btn-primary"
+          >地図を表示</a
+        >
+        <a href="/logout" class="btn btn-secondary">ログアウト</a>
+      </div>
     </div>
 
     <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
