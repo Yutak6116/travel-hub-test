@@ -51,6 +51,7 @@ def extract_destinations_and_purposes(travel_plan_text):
 @plan_bp.route('/add_plan/<int:room_id>', methods=['POST'])
 def add_plan(room_id):
     travel_plan_text = TravelPlan.query.filter_by(room_id=room_id).order_by(TravelPlan.id.desc()).first().markdown
+    print(travel_plan_text)
     destination, purposes = extract_destinations_and_purposes(travel_plan_text)
     n = 0
     for i in range(len(destination)):
@@ -65,10 +66,10 @@ def add_plan(room_id):
     db.session.commit()
     
     travelplanitem = TravelPlanItem.query.filter_by(room_id=room_id).all()
-    print(travelplanitem.place_name)
+    print(travelplanitem)
     
     alltravelplanitem = AllTravelPlanItem.query.filter_by(room_id=room_id).all()
-    print(alltravelplanitem.place_name)
+    print(alltravelplanitem)
     
     return redirect('/chat/' + str(room_id))
     

@@ -435,7 +435,7 @@
         }
       });
 
-      document.getElementById("postPlan").addEventListener("click", function () {
+      document.getElementById("saveTravelListPlan").addEventListener("click", function () {
         const roomId = {{ room.id }}; // ルームIDを取得
         fetch(`/add_plan/${roomId}`, {
           method: "POST",
