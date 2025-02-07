@@ -1,3 +1,4 @@
+#使わない
 import os
 
 import requests
