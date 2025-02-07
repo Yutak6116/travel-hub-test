@@ -65,7 +65,10 @@ def add_plan(room_id):
     db.session.commit()
     
     travelplanitem = TravelPlanItem.query.filter_by(room_id=room_id).all()
-    print(travelplanitem)
+    print(travelplanitem.place_name)
     
+    alltravelplanitem = AllTravelPlanItem.query.filter_by(room_id=room_id).all()
+    print(alltravelplanitem.place_name)
     
+    return redirect('/chat/' + str(room_id))
     

@@ -147,6 +147,7 @@
           </div>
         </div>
       </div>
+      <button id="saveTravelListPlan" class="btn btn-primary mt-2">Travel list保存</button>
       <button id="saveTravelPlan" class="btn btn-primary mt-2">保存</button>
     </div>
 
@@ -383,6 +384,31 @@
         if (travelPlanMarkdown) {
           handleTravelPlanMarkdown(travelPlanMarkdown);
         }
+      });
+
+      document.getElementById("postPlan").addEventListener("click", function () {
+        const roomId = {{ room.id }}; // ルームIDを取得
+        fetch(`/add_plan/${roomId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            // 必要なデータをここに追加
+            // 例: travelPlan: "旅行プランの内容"
+          }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert("旅行プランが追加されました。");
+            } else {
+              alert("旅行プランの追加に失敗しました。");
+            }
+          })
+          .catch((error) => {
+            console.error("エラー:", error);
+            alert("旅行プランの追加中にエラーが発生しました。");
+          });
       });
     </script>
   </body>
