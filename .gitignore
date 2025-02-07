@@ -1,6 +1,7 @@
 /calc_env
 /instance
 /images
+<<<<<<< HEAD
 travel-hub-test_venv/
 _pycache_
 .gitignore
@@ -9,3 +10,10 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+=======
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+travel-hub-test_venv/
+>>>>>>> origin/feature/map_tab
