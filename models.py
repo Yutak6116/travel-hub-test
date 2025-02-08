@@ -53,10 +53,10 @@ class TravelPlanItem(db.Model):
     place_id = db.Column(db.String(255), nullable=True) # place_idは、services/place_services.pyのget_place_coordinates関数で取得する(引数は行く場所名)
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
-    rating = db.Column(db.Integer, nullable=False)  #いいね数
+    rating = db.Column(db.Integer, nullable=False, default=0)  #いいね数
     order = db.Column(db.Integer, nullable=True)
     # start_time = db.Column(db.DateTime, nullable=True)
-    # end_time = db.Column(db.DateTime, nullable=True)
+    # end_time = db.Column(db.DateTime, nullable=Tr, default=0ue)
     # Google Places APIのplace_idを保存するカラム
     
     
@@ -66,10 +66,10 @@ class AllTravelPlanItem(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     place_name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    place_id = db.Column(db.String(255), nullable=False)
+    place_id = db.Column(db.String(255), nullable=True)
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
-    rating = db.Column(db.Integer, nullable=False)
+    rating = db.Column(db.Integer, nullable=False, default=0)
     # Google Places APIのplace_idを保存するカラム
     # start_time = db.Column(db.DateTime, nullable=True)
     # end_time = db.Column(db.DateTime, nullable=True)
@@ -81,7 +81,7 @@ class DeletedTravelPlanItem(db.Model):
     room_id = db.Column(db.Integer, db.ForeignKey('travel_group.id'), nullable=False)
     place_name = db.Column(db.String(100), nullable=True)
     description = db.Column(db.Text, nullable=True)
-    place_id = db.Column(db.String(255), nullable=False)
+    place_id = db.Column(db.String(255), nullable=True)
     # start_time = db.Column(db.DateTime, nullable=True)
     # end_time = db.Column(db.DateTime, nullable=True)    
     # Google Places APIのplace_idを保存するカラム
