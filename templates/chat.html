@@ -12,6 +12,10 @@
       rel="stylesheet"
       href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
     <style>
       body {
         background-color: #f7f7f7;
@@ -92,17 +96,33 @@
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
         <!-- 日程を開始日・終了日に分割 -->
-        <input
+        <!-- <input
           id="aiStartDate"
           type="text"
           class="form-control"
           placeholder="開始日（例: 2023-10-31）"
-        />
+        /> -->
         <input
+          type="text"
+          id="aiStartDate"
+          name="aiStartDate"
+          class="form-control"
+          readonly
+          placeholder="開始日"
+        />
+        <!-- <input
           id="aiEndDate"
           type="text"
           class="form-control"
           placeholder="終了日（例: 2023-11-05）"
+        /> -->
+        <input
+          type="text"
+          id="aiEndDate"
+          name="aiEndDate"
+          class="form-control"
+          readonly
+          placeholder="終了日"
         />
         <input
           id="aiDeparture"
@@ -208,7 +228,7 @@
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script> -->
     <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
@@ -486,10 +506,10 @@
         });
 
       // jQuery UI datepicker の有効化
-      $(function () {
-        $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
-        $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
-      });
+      // $(function () {
+      //   $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
+      //   $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+      // });
 
       // 招待送信用のAJAX処理の例
       $("#inviteForm").submit(function (e) {
@@ -526,6 +546,28 @@
           handleTravelPlanMarkdown(travelPlanMarkdown);
         }
       });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+      // Flatpickr のインスタンス生成
+      var aiStartPicker = flatpickr("#aiStartDate", {});
+      var aiEndPicker = flatpickr("#aiEndDate", {});
+
+      // コンテナ全体をクリックしてカレンダーを開く
+      document
+        .getElementById("aiStartDateContainer")
+        .addEventListener("click", function (e) {
+          if (e.target.id !== "aiStartDate") {
+            aiStartPicker.open();
+          }
+        });
+      document
+        .getElementById("aiEndDateContainer")
+        .addEventListener("click", function (e) {
+          if (e.target.id !== "aiEndDate") {
+            aiEndPicker.open();
+          }
+        });
     </script>
   </body>
 </html>
