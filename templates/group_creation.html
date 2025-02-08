@@ -12,39 +12,13 @@
       rel="stylesheet"
       href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+    />
   </head>
   <body>
-    <!-- ナビゲーションバー -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-      <a class="navbar-brand" href="#">旅プランナー</a>
-      <button
-        class="navbar-toggler"
-        type="button"
-        data-toggle="collapse"
-        data-target="#navbarNav"
-      >
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navbarNav">
-        <ul class="navbar-nav ml-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('group.travels') }}"
-              >旅行予定一覧</a
-            >
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('friend.friend_list') }}"
-              >フレンドリスト</a
-            >
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="{{ url_for('oauth.logout') }}"
-              >ログアウト</a
-            >
-          </li>
-        </ul>
-      </div>
-    </nav>
+    {% include '_navbar.html' %}
 
     <div class="container mt-4">
       <h1 class="mb-4">グループ作成</h1>
@@ -78,24 +52,28 @@
         </div>
 
         <!-- 日程（始まり） -->
-        <div class="form-group">
+        <div class="form-group" id="start_date_container">
           <label for="start_date">始まりの日程</label>
           <input
-            type="date"
+            type="text"
             class="form-control"
             id="start_date"
             name="start_date"
+            readonly
+            placeholder="日付を選択"
           />
         </div>
 
         <!-- 日程（終わり） -->
-        <div class="form-group">
+        <div class="form-group" id="end_date_container">
           <label for="end_date">終わりの日程</label>
           <input
-            type="date"
+            type="text"
             class="form-control"
             id="end_date"
             name="end_date"
+            readonly
+            placeholder="日付を選択"
           />
         </div>
 
@@ -122,17 +100,42 @@
 
         <!-- google account での招待 -->
         <div class="form-group">
-          <label for="invite_emails"
-            >フレンド以外のメンバーを招待（Googleアカウントのメールアドレス、カンマ区切り）</label
+          <label
+            >フレンド以外のメンバーを招待（Googleアカウントのメールアドレス）</label
           >
-          <input
-            type="text"
-            class="form-control"
-            id="invite_emails"
-            name="invite_emails"
-            placeholder="例：user1@gmail.com, user2@gmail.com"
-          />
+          <div id="invite_emails_container">
+            <div class="input-group mb-2">
+              <input
+                type="email"
+                name="invite_emails[]"
+                class="form-control"
+                placeholder="例：user1@gmail.com"
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            class="btn btn-outline-secondary mt-2"
+            id="add-invite-email-btn"
+          >
+            +
+          </button>
         </div>
+
+        <script>
+          document
+            .getElementById("add-invite-email-btn")
+            .addEventListener("click", function () {
+              var container = document.getElementById(
+                "invite_emails_container"
+              );
+              var inputGroup = document.createElement("div");
+              inputGroup.className = "input-group mb-2";
+              inputGroup.innerHTML =
+                '<input type="email" name="invite_emails[]" class="form-control" placeholder="例：user@example.com">';
+              container.appendChild(inputGroup);
+            });
+        </script>
 
         <button type="submit" class="btn btn-primary">グループ作成</button>
       </form>
@@ -141,5 +144,28 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+      // Flatpickrのインスタンスを生成
+      var startPicker = flatpickr("#start_date", {});
+      var endPicker = flatpickr("#end_date", {});
+
+      // コンテナ全体をクリックしてカレンダーを開く
+      document
+        .getElementById("start_date_container")
+        .addEventListener("click", function (e) {
+          // イベントがinput自身のクリックで二重に起こらないように
+          if (e.target.id !== "start_date") {
+            startPicker.open();
+          }
+        });
+      document
+        .getElementById("end_date_container")
+        .addEventListener("click", function (e) {
+          if (e.target.id !== "end_date") {
+            endPicker.open();
+          }
+        });
+    </script>
   </body>
 </html>
