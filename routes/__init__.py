@@ -4,3 +4,4 @@ from .oauth_routes import *
 from .chat_routes import *
 from .plan_routes import *
 from .map_routes import *
+from .profile_routes import *

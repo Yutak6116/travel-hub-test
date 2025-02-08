@@ -45,10 +45,6 @@ def group_creation():
         travel_icon = request.files.get('travel_icon')
         start_date_str = request.form.get('start_date')
         end_date_str = request.form.get('end_date')
-        # 選択されたフレンドのメールアドレスリスト（チェックボックスの値）
-        selected_friends = request.form.getlist('selected_friends')
-        # フレンド以外の招待メール（カンマ区切り）
-        invite_emails = request.form.get('invite_emails')
         
         # 日付文字列をDate型に変換
         try:
@@ -79,22 +75,32 @@ def group_creation():
         db.session.add(new_group)
         db.session.commit()
 
-        # 招待処理：グループ作成者以外の全ての招待先に対して GroupInvitation を作成
-        invitees = set(selected_friends)  # チェックボックスで選んだフレンド（メールアドレス）
-        if invite_emails:
-            # カンマ区切りのメールアドレスを追加
-            for email in invite_emails.split(','):
-                invitees.add(email.strip())
-        # 作成者自身への招待は除外
-        if creator_email in invitees:
-            invitees.remove(creator_email)
+        # フレンド選択による招待
+        selected_friends = request.form.getlist('selected_friends')
+        if selected_friends:
+            for friend_email in selected_friends:
+                invitation = GroupInvitation(
+                    group_id=new_group.id,
+                    invited_email=friend_email,
+                    status='pending'
+                )
+                db.session.add(invitation)
         
-        for email in invitees:
-            invitation = GroupInvitation(group_id=new_group.id, invited_email=email, status='pending')
-            db.session.add(invitation)
+        # 入力されたメールアドレスによる招待（空文字は除外）
+        invite_emails = request.form.getlist('invite_emails[]')
+        if invite_emails:
+            for email in invite_emails:
+                email = email.strip()
+                if email:
+                    invitation = GroupInvitation(
+                        group_id=new_group.id,
+                        invited_email=email,
+                        status='pending'
+                    )
+                    db.session.add(invitation)
+        
         db.session.commit()
-
-        flash('グループが作成され、招待が送信されました。')
+        flash("グループを作成し、招待を送信しました。")
         return redirect(url_for('group.travels'))
     
     # GETの場合は、ログイン中のユーザーのフレンド情報のみを取得

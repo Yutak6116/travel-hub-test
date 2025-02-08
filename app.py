@@ -17,6 +17,7 @@ from routes.friend_routes import friend_bp
 from routes.chat_routes import chat_bp
 from routes.map_routes import map_bp
 from routes.plan_routes import plan_bp
+from routes.profile_routes import profile_bp
 
 app.register_blueprint(oauth_bp)
 app.register_blueprint(group_bp)
@@ -24,6 +25,7 @@ app.register_blueprint(friend_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(plan_bp)
 app.register_blueprint(map_bp)
+app.register_blueprint(profile_bp)
 
 import routes
 
