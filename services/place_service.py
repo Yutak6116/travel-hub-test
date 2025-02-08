@@ -7,5 +7,6 @@ def get_place_coordinates(place_name: str) -> dict:
     url = "https://get-coordinates-kxsgzuno2a-uc.a.run.app"
     data = {"place_name": place_name}
     response = requests.post(url, json=data)
-    return response.json()
+    result = response.json()
+    return result.get('place_id')
 

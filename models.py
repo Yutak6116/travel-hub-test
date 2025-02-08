@@ -54,7 +54,7 @@ class TravelPlanItem(db.Model):
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
     # comments = db.relationship('PlaceComment', backref='travel_plan_item', lazy=True)
     rating = db.Column(db.Integer, nullable=False, default=0)  #いいね数
-    order = db.Column(db.Integer, nullable=True)
+    order = db.Column(db.Integer, nullable=False)  # 何番目に行くか
     # start_time = db.Column(db.DateTime, nullable=True)
     # end_time = db.Column(db.DateTime, nullable=Tr, default=0ue)
     # Google Places APIのplace_idを保存するカラム

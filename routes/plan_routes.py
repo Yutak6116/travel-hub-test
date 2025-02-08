@@ -1,6 +1,7 @@
 from flask import Blueprint, request, redirect, url_for, session, render_template, flash
 from extensions import db
 from models import TravelPlan, TravelPlanItem, AllTravelPlanItem, DeletedTravelPlanItem
+from services.place_service import get_place_coordinates
 
 plan_bp = Blueprint('plan', __name__)
 
@@ -52,6 +53,8 @@ def extract_destinations_and_purposes(travel_plan_text):
                     destinations.append(destination)
                     purposes.append(purpose)
                     
+    print(travel_plan_text)
+    print(destinations)
     return destinations, purposes
 
 # 関数get_all_place_id_in_travelplanitem を作る
@@ -62,21 +65,42 @@ def extract_destinations_and_purposes(travel_plan_text):
 @plan_bp.route('/add_plan/<int:room_id>', methods=['POST'])
 def add_plan(room_id):
     travel_plan_text = TravelPlan.query.filter_by(room_id=room_id).order_by(TravelPlan.id.desc()).first().markdown
-    print(travel_plan_text)
-    destination, purposes = extract_destinations_and_purposes(travel_plan_text)
+    destinations, purposes = extract_destinations_and_purposes(travel_plan_text)
     # TravelPlanItemのroom_id=room_idのデータを削除
     TravelPlanItem.query.filter_by(room_id=room_id).delete()
     n = 0
-    for i in range(len(destination)):
-        if str(destination[i]).isdecimal():
-            n = int(destination[i])
+    t = 0   #何番目に行くか
+    for i in range(len(destinations)):
+        if str(destinations[i]).isdecimal():
+            n = int(destinations[i])
             continue
-        new_plan_item = TravelPlanItem(room_id=room_id, place_name=destination[i], description=purposes[i], date = n)
-        new_all_plan_item = AllTravelPlanItem(room_id=room_id, place_name=destination[i], description=purposes[i])
+        new_place_id = get_place_coordinates(destinations[i])
+        new_plan_item = TravelPlanItem(
+            room_id=room_id, 
+            place_name=destinations[i], 
+            description=purposes[i], 
+            date = n, place_id = 
+            new_place_id, 
+            order=t
+            )
+        new_all_plan_item = AllTravelPlanItem(
+            room_id=room_id, 
+            place_name=destinations[i], 
+            description=purposes[i], 
+            place_id = new_place_id)
         db.session.add(new_plan_item)
         db.session.add(new_all_plan_item)
+        t += 1
     
     db.session.commit()
 
     return redirect('/chat/' + str(room_id))
-    
+
+@plan_bp.route('/delete_plan/<int:room_id>', methods=['POST'])
+def delete_plan(room_id):
+    # TravelPlanItemのroom_id=room_idのデータを削除
+    place_name = request.form.get('place_name')
+    TravelPlanItem.query.filter_by(room_id=room_id, place_name=place_name).delete()
+    db.session.commit()
+
+    return redirect('/chat/' + str(room_id))
