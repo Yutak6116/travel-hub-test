@@ -92,18 +92,64 @@
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
         <!-- 日程を開始日・終了日に分割 -->
-        <input id="aiStartDate" type="text" class="form-control" placeholder="開始日（例: 2023-10-31）" />
-        <input id="aiEndDate" type="text" class="form-control" placeholder="終了日（例: 2023-11-05）" />
-        <input id="aiDeparture" type="text" class="form-control" placeholder="出発場所" />
-        <input id="aiDestination" type="text" class="form-control" placeholder="目標場所" />
-        <input id="aiCost" type="text" class="form-control" placeholder="金額" />
-        <input id="aiNote" type="text" class="form-control" placeholder="備考" />
+        <input
+          id="aiStartDate"
+          type="text"
+          class="form-control"
+          placeholder="開始日（例: 2023-10-31）"
+        />
+        <input
+          id="aiEndDate"
+          type="text"
+          class="form-control"
+          placeholder="終了日（例: 2023-11-05）"
+        />
+        <input
+          id="aiDeparture"
+          type="text"
+          class="form-control"
+          placeholder="出発場所"
+        />
+        <input
+          id="aiDestination"
+          type="text"
+          class="form-control"
+          placeholder="目標場所"
+        />
+        <input
+          id="aiCost"
+          type="text"
+          class="form-control"
+          placeholder="金額"
+        />
+        <input
+          id="aiNote"
+          type="text"
+          class="form-control"
+          placeholder="備考"
+        />
         <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
       </div>
 
       <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
         >旅行一覧へ</a
       >
+      <div class="invite-section mt-3">
+        <h5>グループ招待</h5>
+        <form id="inviteForm">
+          <div class="input-group">
+            <input
+              type="email"
+              class="form-control"
+              placeholder="招待するメールアドレス"
+              id="inviteEmail"
+              required
+            />
+            <button type="submit" class="btn btn-primary">招待を送る</button>
+          </div>
+        </form>
+        <div id="inviteMessage" class="mt-2"></div>
+      </div>
     </div>
     <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
     <div class="container mt-4">
@@ -388,40 +434,88 @@
       });
 
       // 簡単AI呼び出し用のイベントリスナー（送信者は現在のユーザーとし、メッセージ先頭に"@AI"を付与）
-      document.getElementById("aiCallBtn").addEventListener("click", function () {
-        const startDate = document.getElementById("aiStartDate").value.trim();
-        const endDate = document.getElementById("aiEndDate").value.trim();
-        const departure = document.getElementById("aiDeparture").value.trim();
-        const destination = document.getElementById("aiDestination").value.trim();
-        const cost = document.getElementById("aiCost").value.trim();
-        const note = document.getElementById("aiNote").value.trim();
-        if (!startDate && !endDate && !departure && !destination && !cost && !note) return;
-        
-        const dateText = startDate && endDate ? startDate + " ～ " + endDate : startDate || endDate;
-        const aiMessage = "@AI AI呼び出し要求:\n日程: " + dateText +
-                          "\n出発場所: " + departure +
-                          "\n目標場所: " + destination +
-                          "\n金額: " + cost +
-                          "\n備考: " + note;
-        socket.emit("send_message", {
-          user: userName,
-          message: aiMessage,
-          room: room,
+      document
+        .getElementById("aiCallBtn")
+        .addEventListener("click", function () {
+          const startDate = document.getElementById("aiStartDate").value.trim();
+          const endDate = document.getElementById("aiEndDate").value.trim();
+          const departure = document.getElementById("aiDeparture").value.trim();
+          const destination = document
+            .getElementById("aiDestination")
+            .value.trim();
+          const cost = document.getElementById("aiCost").value.trim();
+          const note = document.getElementById("aiNote").value.trim();
+          if (
+            !startDate &&
+            !endDate &&
+            !departure &&
+            !destination &&
+            !cost &&
+            !note
+          )
+            return;
+
+          const dateText =
+            startDate && endDate
+              ? startDate + " ～ " + endDate
+              : startDate || endDate;
+          const aiMessage =
+            "@AI AI呼び出し要求:\n日程: " +
+            dateText +
+            "\n出発場所: " +
+            departure +
+            "\n目標場所: " +
+            destination +
+            "\n金額: " +
+            cost +
+            "\n備考: " +
+            note;
+          socket.emit("send_message", {
+            user: userName,
+            message: aiMessage,
+            room: room,
+          });
+
+          // 入力欄をクリア
+          document.getElementById("aiStartDate").value = "";
+          document.getElementById("aiEndDate").value = "";
+          document.getElementById("aiDeparture").value = "";
+          document.getElementById("aiDestination").value = "";
+          document.getElementById("aiCost").value = "";
+          document.getElementById("aiNote").value = "";
         });
-        
-        // 入力欄をクリア
-        document.getElementById("aiStartDate").value = "";
-        document.getElementById("aiEndDate").value = "";
-        document.getElementById("aiDeparture").value = "";
-        document.getElementById("aiDestination").value = "";
-        document.getElementById("aiCost").value = "";
-        document.getElementById("aiNote").value = "";
-      });
 
       // jQuery UI datepicker の有効化
-      $(function(){
+      $(function () {
         $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
         $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+      });
+
+      // 招待送信用のAJAX処理の例
+      $("#inviteForm").submit(function (e) {
+        e.preventDefault();
+        var email = $("#inviteEmail").val().trim();
+        if (!email) {
+          return;
+        }
+        $.ajax({
+          url: "{{ url_for('chat.chat_invite', room_id=room.id) }}", // エンドポイント名を修正
+          method: "POST",
+          data: { invite_email: email },
+          success: function (response) {
+            $("#inviteMessage")
+              .text("招待を送信しました。")
+              .removeClass("text-danger")
+              .addClass("text-success");
+            $("#inviteEmail").val("");
+          },
+          error: function () {
+            $("#inviteMessage")
+              .text("招待の送信に失敗しました。")
+              .removeClass("text-success")
+              .addClass("text-danger");
+          },
+        });
       });
     </script>
     <script>

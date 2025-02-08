@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, url_for, session, request, render_template, flash
+from flask import Blueprint, redirect, url_for, session, request, render_template, flash, jsonify
 from flask_socketio import emit, join_room
 import markdown
 from extensions import db, socketio
@@ -93,3 +93,25 @@ def handle_send_message(data):
         else:
             # エラーハンドリング（必要に応じて）
             pass
+
+@chat_bp.route('/invite/<int:room_id>', methods=['POST'])
+def chat_invite(room_id):
+    if 'google_id' not in session:
+        return jsonify({'error': '認証が必要です'}), 401
+
+    invite_email = request.form.get('invite_email')
+    if not invite_email:
+        return jsonify({'error': 'メールアドレスが必要です'}), 400
+
+    # 既存の招待情報との重複をチェック
+    existing_invitation = GroupInvitation.query.filter_by(
+        group_id=room_id,
+        invited_email=invite_email
+    ).first()
+    if existing_invitation:
+        return jsonify({'error': '既に招待済みです'}), 400
+
+    invitation = GroupInvitation(group_id=room_id, invited_email=invite_email, status='pending')
+    db.session.add(invitation)
+    db.session.commit()
+    return jsonify({'success': True}), 200
