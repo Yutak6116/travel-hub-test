@@ -1,8 +1,11 @@
 /calc_env
 /instance
 /images
+travel-hub-test_venv/
+_pycache_
+.gitignore
+.env
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-travel-hub-test_venv/
