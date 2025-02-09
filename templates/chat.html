@@ -1,216 +1,287 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{{ room.name }} - チャットルーム</title>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
-    />
-    <style>
-      body {
-        background-color: #f7f7f7;
-      }
-      /* ヘッダー部分 */
-      .chat-header {
-        background-color: #007bff;
-        color: #fff;
-        padding: 20px;
-        text-align: center;
-        border-radius: 0 0 10px 10px;
-        margin-bottom: 20px;
-      }
-      /* チャットボックス */
-      #chat-box {
-        background-color: #fff;
-        border: none;
-        border-radius: 10px;
-        height: 400px;
-        overflow-y: auto;
-        padding: 15px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-      }
-      /* メッセージバブル */
-      .message {
-        padding: 10px 15px;
-        margin-bottom: 10px;
-        border-radius: 20px;
-        max-width: 70%;
-        word-wrap: break-word;
-      }
-      .message.user {
-        background-color: #007bff;
-        color: #fff;
-        margin-left: auto;
-      }
-      .message.other {
-        background-color: #e9e9eb;
-        color: #333;
-        margin-right: auto;
-      }
-      /* 入力フォーム */
-      #chat-form .form-control {
-        border-radius: 20px 0 0 20px;
-      }
-      #chat-form .btn {
-        border-radius: 0 20px 20px 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="container">
-      <div class="chat-header">
-        <h1>{{ room.name }}</h1>
-        <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
-      </div>
-      <div id="chat-box">
-        {% for msg in history %}
-        <div
-          class="message {% if msg.username == user.name %}user{% else %}other{% endif %}"
-        >
-          {{ msg.username }}: {{ msg.message | safe }}
-        </div>
-        {% endfor %}
-      </div>
-      <form id="chat-form" class="input-group">
-        <input
-          id="message-input"
-          type="text"
-          class="form-control"
-          placeholder="メッセージを入力"
-          autocomplete="off"
-        />
-        <button class="btn btn-primary" type="submit">送信</button>
-      </form>
 
-      <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
-      <div class="input-group mt-4">
-        <!-- 日程を開始日・終了日に分割 -->
-        <input
-          id="aiStartDate"
-          type="text"
-          class="form-control"
-          placeholder="開始日（例: 2023-10-31）"
-        />
-        <input
-          id="aiEndDate"
-          type="text"
-          class="form-control"
-          placeholder="終了日（例: 2023-11-05）"
-        />
-        <input
-          id="aiDeparture"
-          type="text"
-          class="form-control"
-          placeholder="出発場所"
-        />
-        <input
-          id="aiDestination"
-          type="text"
-          class="form-control"
-          placeholder="目標場所"
-        />
-        <input
-          id="aiCost"
-          type="text"
-          class="form-control"
-          placeholder="金額"
-        />
-        <input
-          id="aiNote"
-          type="text"
-          class="form-control"
-          placeholder="備考"
-        />
-        <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
-      </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ room.name }} - チャットルーム</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    body {
+      background-color: #EFE9D5;
+      font-family: "Noto Sans JP", sans-serif;
+      padding-top: 100px;
+    }
 
-      <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
-        >旅行一覧へ</a
-      >
-      <div class="invite-section mt-3">
-        <h5>グループ招待</h5>
-        <form id="inviteForm">
-          <div class="input-group">
-            <input
-              type="email"
-              class="form-control"
-              placeholder="招待するメールアドレス"
-              id="inviteEmail"
-              required
-            />
-            <button type="submit" class="btn btn-primary">招待を送る</button>
-          </div>
-        </form>
-        <div id="inviteMessage" class="mt-2"></div>
-      </div>
-    </div>
-    <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
-    <div class="container mt-4">
-      <h2>旅行プラン</h2>
+    /* ヘッダー部分 */
+    .chat-header {
+      background-color: #497D74;
+      color: #fff;
+      height: 10vh;
+      padding: 20px;
+      text-align: center;
+      border-radius: 0 0 10px 10px;
+      margin-bottom: 20px;
+    }
+
+    .custom-link {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    .bi {
+      font-size: 2rem;
+      vertical-align: middle;
+    }
+
+    /* チャットボックス */
+    #chat-box {
+      background-color: #fff;
+      border: none;
+      border-radius: 10px;
+      height: 80vh;
+      overflow-y: auto;
+      padding: 15px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    /* メッセージバブル */
+    .message {
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 20px;
+      max-width: 70%;
+      word-wrap: break-word;
+    }
+
+    .message.user {
+      background-color: #71BBB2;
+      color: #fff;
+      margin-left: auto;
+    }
+
+    .message.other {
+      background-color: #e9e9eb;
+      color: #333;
+      margin-right: auto;
+    }
+
+    /* 入力フォーム */
+    #chat-form .form-control {
+      border-radius: 20px 0 0 20px;
+    }
+
+    #chat-form .btn {
+      border-radius: 0 20px 20px 0;
+    }
+
+    .btn-primary {
+      background-color: #497D74;
+      border-color: #497D74;
+    }
+
+    .btn-primary:hover {
+      background-color: #3f6c63;
+      border-color: #3f6c63;
+    }
+
+    .accordion-button:focus,
+    .accordion-button:not(.collapsed) {
+      background-color: #497D74;
+      color: #ffffff;
+    }
+
+    .accordion-item {
+      background-color: #EFE9D5;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="chat-header fixed-top">
       <div class="row">
-        <!-- 概要 -->
-        <div class="col-md-4">
-          <h3>概要</h3>
-          <ul id="overviewList" class="list-group sortable">
-            <!-- 項目がここに追加されます -->
-          </ul>
-          <div class="input-group mt-2">
-            <input
-              id="overviewInput"
-              type="text"
-              class="form-control"
-              placeholder="新しい概要を入力"
-            />
-            <button id="addOverview" class="btn btn-secondary">追加</button>
-          </div>
+        <div class="col-2 justify-content-start p-0">
+          <a href="{{ url_for('group.travels') }}" class="custom-link">
+            <i class="bi bi-arrow-bar-left inline-block"></i> 戻る
+          </a>
         </div>
-        <!-- 旅行プラン -->
-        <div class="col-md-4">
-          <h3>旅行プラン</h3>
-          <ul id="planList" class="list-group sortable">
-            <!-- 項目がここに追加されます -->
-          </ul>
-          <div class="input-group mt-2">
-            <input
-              id="planInput"
-              type="text"
-              class="form-control"
-              placeholder="新しい旅行プランを入力"
-            />
-            <button id="addPlan" class="btn btn-secondary">追加</button>
-          </div>
+        <div class="col-7">
+          <h1>{{ room.name }}</h1>
         </div>
-        <!-- 費用 -->
-        <div class="col-md-4">
-          <h3>費用</h3>
-          <ul id="costList" class="list-group sortable">
-            <!-- 項目がここに追加されます -->
-          </ul>
-          <div class="input-group mt-2">
-            <input
-              id="costInput"
-              type="text"
-              class="form-control"
-              placeholder="新しい費用を入力"
-            />
-            <button id="addCost" class="btn btn-secondary">追加</button>
+        <div class="col-3">
+          <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
+        </div>
+      </div>
+      <!-- <h1>{{ room.name }}</h1> -->
+      <!-- <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p> -->
+    </div>
+    <div id="chat-box">
+      {% for msg in history %}
+      <div class="message {% if msg.username == user.name %}user{% else %}other{% endif %}">
+        {{ msg.username }}: {{ msg.message | safe }}
+      </div>
+      {% endfor %}
+    </div>
+    <form id="chat-form" class="input-group">
+      <input id="message-input" type="text" class="form-control" placeholder="メッセージを入力" autocomplete="off" />
+      <button class="btn btn-primary" type="submit">送信</button>
+    </form>
+
+    <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
+    <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
+    <hr>
+    <div class="accordion mt-3 mb-3" id="accordionPanelsStayOpenExample">
+      <p class="test-center">AIに聞いてみよう！</p>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseOne">
+            開始日
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseOne" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <input id="aiStartDate" type="text" class="form-control" placeholder="開始日（例: 2023-10-31）" />
           </div>
         </div>
       </div>
-      <button id="saveTravelPlan" class="btn btn-primary mt-2">保存</button>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseTwo">
+            終了日
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <input id="aiEndDate" type="text" class="form-control" placeholder="終了日（例: 2023-11-05）" />
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseThree" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseThree">
+            出発場所
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <input id="aiDeparture" type="text" class="form-control" placeholder="出発場所" />
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseFour" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseFour">
+            目的地
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseFour" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <input id="aiDestination" type="text" class="form-control" placeholder="目標地" />
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseFive" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseFive">
+            概要
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseFive" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <ul id="overviewList" class="list-group sortable">
+              <!-- 項目がここに追加されます -->
+            </ul>
+            <div class="input-group mt-2">
+              <input id="overviewInput" type="text" class="form-control" placeholder="新しい概要を入力" />
+              <button id="addOverview" class="btn btn-secondary">追加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseSix" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseSix">
+            旅行プラン
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseSix" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <ul id="planList" class="list-group sortable">
+              <!-- 項目がここに追加されます -->
+            </ul>
+            <div class="input-group mt-2">
+              <input id="planInput" type="text" class="form-control" placeholder="新しい旅行プランを入力" />
+              <button id="addPlan" class="btn btn-secondary">追加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="accordion-item">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+            data-bs-target="#panelsStayOpen-collapseSeven" aria-expanded="false"
+            aria-controls="panelsStayOpen-collapseSeven">
+            費用
+          </button>
+        </h2>
+        <div id="panelsStayOpen-collapseSeven" class="accordion-collapse collapse">
+          <div class="accordion-body">
+            <ul id="costList" class="list-group sortable">
+              <!-- 項目がここに追加されます -->
+            </ul>
+            <div class="input-group mt-2 mb-3">
+              <input id="costInput" type="text" class="form-control" placeholder="新しい費用を入力" />
+              <button id="addCost" class="btn btn-secondary">追加</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-group float-end" role="group" aria-label="Basic example">
+        <button id="saveTravelPlan" class="btn btn-primary m-1">保存</button>
+        <button id="aiCallBtn" class="btn btn-primary m-1">AI呼び出し送信</button>
+      </div>
     </div>
+
+
+
+    <br>
+    <hr>
+    <div class="invite-section mb-4">
+      <p>グループ招待</p>
+      <form id="inviteForm">
+        <div class="input-group">
+          <input type="email" class="form-control" placeholder="招待するメールアドレス" id="inviteEmail" required />
+          <button type="submit" class="btn btn-primary">招待を送る</button>
+        </div>
+      </form>
+      <div id="inviteMessage" class="mt-2"></div>
+    </div>
+
+
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"></script>
     <script>
       const socket = io();
       const chatForm = document.getElementById("chat-form");
@@ -313,8 +384,8 @@
         if (text !== "") {
           $("#overviewList").append(
             '<li class="list-group-item">' +
-              text +
-              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+            text +
+            ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
           );
           $("#overviewInput").val("");
         }
@@ -324,8 +395,8 @@
         if (text !== "") {
           $("#planList").append(
             '<li class="list-group-item">' +
-              text +
-              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+            text +
+            ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
           );
           $("#planInput").val("");
         }
@@ -335,8 +406,8 @@
         if (text !== "") {
           $("#costList").append(
             '<li class="list-group-item">' +
-              text +
-              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+            text +
+            ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
           );
           $("#costInput").val("");
         }
@@ -372,8 +443,8 @@
         items.forEach(function (item) {
           list.append(
             '<li class="list-group-item">' +
-              item +
-              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+            item +
+            ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
           );
         });
         // ソート可能処理の再設定
@@ -406,11 +477,11 @@
         // AJAX送信例（必要に応じて実装）
         alert(
           "保存されました。\n概要:\n" +
-            overviewItems.join("\n") +
-            "\n\n旅行プラン:\n" +
-            planItems.join("\n") +
-            "\n\n費用:\n" +
-            costItems.join("\n")
+          overviewItems.join("\n") +
+          "\n\n旅行プラン:\n" +
+          planItems.join("\n") +
+          "\n\n費用:\n" +
+          costItems.join("\n")
         );
       });
 
@@ -521,11 +592,13 @@
     <script>
       // 画面読み込み時にDBから取得した旅行プランがあればパース
       window.addEventListener("load", function () {
-        var travelPlanMarkdown = {{ travel_plan_markdown|tojson|safe }};
-        if (travelPlanMarkdown) {
-          handleTravelPlanMarkdown(travelPlanMarkdown);
-        }
+        var travelPlanMarkdown = {{ travel_plan_markdown| tojson | safe
+      }};
+      if (travelPlanMarkdown) {
+        handleTravelPlanMarkdown(travelPlanMarkdown);
+      }
       });
     </script>
-  </body>
+</body>
+
 </html>
