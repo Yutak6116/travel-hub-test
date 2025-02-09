@@ -162,7 +162,7 @@
           <ul id="planList" class="list-group sortable">
             <!-- 項目がここに追加されます -->
           </ul>
-          <form id="planForm" action="{{ url_for('plan.add_plan_manually',room_id=room.id) }}" method="POST">
+          <form id="planForm" action="{{ url_for('plan.candidate_site',room_id=room.id) }}" method="POST">
             <div class="input-group mt-2">
               <textarea
                 id="place_name"
