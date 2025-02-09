@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>項目の展開</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .details {
+            display: none;
+        }
+        .list-group-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="row">
+            <div class="col-md-12">
+                <h3>項目リスト</h3>
+                <ul class="list-group" id="itemList">
+                    <li class="list-group-item">
+                        日本
+                        <div class="details">
+                            <p>日本は東アジアに位置する島国で、豊かな文化と歴史を持っています。</p>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        アメリカ
+                        <div class="details">
+                            <p>アメリカ合衆国は北アメリカに位置する国で、多様な文化と経済力を持っています。</p>
+                        </div>
+                    </li>
+                    <!-- 他の項目も同様に追加 -->
+                </ul>
+                <div class="input-group mt-3">
+                    <input type="text" id="newItemTitle" class="form-control" placeholder="新しい項目のタイトル">
+                    <input type="text" id="newItemDetails" class="form-control" placeholder="新しい項目の詳細">
+                    <button id="addItem" class="btn btn-primary">追加</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#addItem").click(function() {
+                const title = $("#newItemTitle").val().trim();
+                const details = $("#newItemDetails").val().trim();
+                if (title !== "" && details !== "") {
+                    const newItem = `
+                        <li class="list-group-item">
+                            ${title}
+                            <div class="details">
+                                <p>${details}</p>
+                            </div>
+                        </li>
+                    `;
+                    $("#itemList").append(newItem);
+                    $("#newItemTitle").val("");
+                    $("#newItemDetails").val("");
+                }
+            });
+
+            // 新しく追加された項目にもクリックイベントを設定
+            $(document).on("click", ".list-group-item", function() {
+                $(this).find(".details").slideToggle();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -9,4 +9,3 @@ def get_place_coordinates(place_name: str) -> dict:
     response = requests.post(url, json=data)
     result = response.json()
     return result.get('place_id')
-
