@@ -1,34 +1,43 @@
-from flask import Blueprint, redirect, url_for, session, request, render_template
+from flask import Blueprint, redirect, render_template, request, session, url_for
+from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 from google_auth_oauthlib.flow import Flow
-from google.auth.transport import requests as google_requests
-import os
-from config import REDIRECT_URI, GOOGLE_CLIENT_ID
 
-oauth_bp = Blueprint('oauth', __name__)
+from config import GOOGLE_CLIENT_ID, REDIRECT_URI
+from extensions import db
+from models import User
+
+oauth_bp = Blueprint("oauth", __name__)
 
 flow = Flow.from_client_secrets_file(
-    'client_secret.json',
-    scopes=["openid", "https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"],
-    redirect_uri=REDIRECT_URI
+    "client_secret.json",
+    scopes=[
+        "openid",
+        "https://www.googleapis.com/auth/userinfo.profile",
+        "https://www.googleapis.com/auth/userinfo.email",
+    ],
+    redirect_uri=REDIRECT_URI,
 )
 
-@oauth_bp.route('/')
-def index():
-    return render_template('index.html')
 
-@oauth_bp.route('/login')
+@oauth_bp.route("/")
+def index():
+    return render_template("index.html")
+
+
+@oauth_bp.route("/login")
 def login():
     authorization_url, state = flow.authorization_url()
-    session['state'] = state
+    session["state"] = state
     return redirect(authorization_url)
 
-@oauth_bp.route('/callback')
+
+@oauth_bp.route("/callback")
 def callback():
     flow.fetch_token(authorization_response=request.url)
 
-    if not session['state'] == request.args['state']:
-        return 'State mismatch error', 400
+    if not session["state"] == request.args["state"]:
+        return "State mismatch error", 400
 
     credentials = flow.credentials
     request_session = google_requests.Request()
@@ -37,13 +46,25 @@ def callback():
         credentials.id_token, request_session, GOOGLE_CLIENT_ID
     )
 
-    session['google_id'] = id_info.get("sub")
-    session['email'] = id_info.get("email")
-    session['name'] = id_info.get("name")
+    google_id = id_info.get("sub")
+    email = id_info.get("email")
+    name = id_info.get("name")
 
-    return redirect(url_for('group.travels'))
+    user = User.query.filter_by(google_id=google_id).first()
+    if not user:
+        user = User(google_id=google_id, email=email, name=name)
+        db.session.add(user)
+        db.session.commit()
 
-@oauth_bp.route('/logout')
+    session["user_id"] = user.id
+    session["google_id"] = google_id
+    session["email"] = email
+    session["name"] = name
+
+    return redirect(url_for("group.travels"))
+
+
+@oauth_bp.route("/logout")
 def logout():
     session.clear()
-    return redirect('/')
+    return redirect("/")

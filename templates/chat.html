@@ -10,8 +10,7 @@
         body {
             background-color: #f7f7f7;
         }
-        /* ヘッダー部分 */
-        .chat-header {
+          .chat-header {
             background-color: #007bff;
             color: #fff;
             padding: 20px;
@@ -19,8 +18,7 @@
             border-radius: 0 0 10px 10px;
             margin-bottom: 20px;
         }
-        /* チャットボックス */
-        #chat-box {
+          #chat-box {
             background-color: #fff;
             border: none;
             border-radius: 10px;
@@ -30,8 +28,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
-        /* メッセージバブル */
-        .message {
+          .message {
             padding: 10px 15px;
             margin-bottom: 10px;
             border-radius: 20px;
@@ -48,13 +45,20 @@
             color: #333;
             margin-right: auto;
         }
-        /* 入力フォーム */
-        #chat-form .form-control {
+          #chat-form .form-control {
             border-radius: 20px 0 0 20px;
         }
         #chat-form .btn {
             border-radius: 0 20px 20px 0;
         }
+      /* 詳細パネル */
+      #siteDetail {
+        border: 1px solid #ccc;
+        padding: 10px;
+      }
+      #detailCommentList li {
+        font-size: 0.9em;
+      }
         .btn-like {
             color: black;
         }
@@ -79,243 +83,363 @@
 </head>
 <body>
     <div class="container">
-        <div class="chat-header">
-            <h1>{{ room.name }}</h1>
-            <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
+      <!-- チャットヘッダー -->
+      <div class="chat-header">
+        <h1>{{ room.name }}</h1>
+        <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
+      </div>
+
+      <!-- チャット表示欄 -->
+      <div id="chat-box">
+        {% for msg in history %}
+        <div
+          class="message {% if msg.username == user.name %}user{% else %}other{% endif %}"
+        >
+          {{ msg.username }}: {{ msg.message | safe }}
         </div>
-        <div id="chat-box">
-            {% for msg in history %}
-            <div class="message {% if msg.username == user.name %}user{% else %}other{% endif %}">
-                {{ msg.username }}: {{ msg.message | safe }}
-            </div>
+        {% endfor %}
+      </div>
+
+      <!-- チャット送信フォーム -->
+      <form id="chat-form" class="input-group">
+        <input
+          id="message-input"
+          type="text"
+          class="form-control"
+          placeholder="メッセージを入力"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" type="submit">送信</button>
+      </form>
+
+      <div class="mt-3">
+        <!-- 簡単AI呼び出しセクション -->
+        <div class="input-group mt-4">
+          <input
+            placeholder="開始日（例: 2023-10-31）"
+            class="form-control"
+          />
+          <input
+            placeholder="終了日（例: 2023-11-05）"
+            class="form-control"
+          />
+          <input
+            placeholder="出発場所"
+            class="form-control"
+          />
+          <input
+            placeholder="目標場所"
+            class="form-control"
+          />
+          <input
+            placeholder="金額"
+            class="form-control"
+          />
+          <input
+            placeholder="備考"
+            class="form-control"
+          />
+          <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
+        </div>
+
+        <!-- リンクボタン -->
+        <a
+          href="{{ url_for('group.travels') }}"
+          class="btn btn-secondary mt-3"
+        >
+          旅行一覧へ
+        </a>
+        <a
+          href="{{ url_for('map.show_map', room_id=room.id) }}"
+          class="btn btn-primary"
+        >
+          地図を表示
+        </a>
+
+        <!-- グループ招待フォーム -->
+        <div class="invite-section mt-3">
+          <h5>グループ招待</h5>
+          <form id="inviteForm">
+          </form>
+          <div id="inviteMessage" class="mt-2"></div>
+        </div>
+      </div>
+
+      <!-- 候補地一覧＋詳細表示 (2カラム) -->
+      <div class="row mt-4">
+        <!-- 候補地一覧（左） -->
+        <div class="col-md-6">
+          <h3>候補地一覧</h3>
+          <ul id="planList" class="list-group">
+            {% for site in candidate_sites %}
+            <li
+              class="list-group-item mb-2 site-item"
+              data-siteid="{{ site.id }}"
+              data-placename="{{ site.place_name }}"
+              data-description="{{ site.description }}"
+              data-likes="{{ site.like }}"
+            >
+              <strong>{{ site.place_name }}</strong>
+              | いいね: <span class="like-count">{{ site.like }}</span>
+              | コメント: {{ site.comments|length }}
+              <button
+                class="btn btn-sm like-btn"
+                data-siteid="{{ site.id }}"
+                data-userid="{{ user.id }}"
+                style="background-color: {% if site.id in liked_sites %}#ff99aa{% else %}#ccc{% endif %}; margin-left: 10px;"
+              >
+                ♥
+              </button>
+            </li>
             {% endfor %}
-        </div>
-        <form id="chat-form" class="input-group">
-            <input id="message-input" type="text" class="form-control" placeholder="メッセージを入力" autocomplete="off" />
-            <button class="btn btn-primary" type="submit">送信</button>
-        </form>
-        <div class="mt-3">
-            <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
-            <div class="input-group mt-4">
-                <!-- 日程を開始日・終了日に分割 -->
-                <input id="aiStartDate" type="text" class="form-control" placeholder="開始日（例: 2023-10-31）" />
-                <input id="aiEndDate" type="text" class="form-control" placeholder="終了日（例: 2023-11-05）" />
-                <input id="aiDeparture" type="text" class="form-control" placeholder="出発場所" />
-                <input id="aiDestination" type="text" class="form-control" placeholder="目標場所" />
-                <input id="aiCost" type="text" class="form-control" placeholder="金額" />
-                <input id="aiNote" type="text" class="form-control" placeholder="備考" />
-                <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
+          </ul>
+
+          <!-- 新しい候補地追加フォーム -->
+          <form
+            id="planForm"
+            action="{{ url_for('plan.add_plan_manually', room_id=room.id, user_id=user.id) }}"
+            method="POST"
+            class="mt-3"
+          >
+            <div class="input-group mt-2">
+              <textarea
+                id="place_name"
+                name="place_name"
+                class="form-control"
+                placeholder="新しい候補地を入力"
+                rows="1"
+              ></textarea>
             </div>
-            <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3">旅行一覧へ</a>
-            <!--<a href="{{ url_for('map.show_map', room_id=room.id) }}" class="btn btn-primary">地図を表示</a>-->
-            <button id="toggle-map-btn" class="btn btn-info mt-3">地図の表示/非表示</button>
-            <div class="invite-section mt-3">
-                <h5>グループ招待</h5>
-                <form id="inviteForm">
-                    <div class="input-group">
-                        <input type="email" class="form-control" placeholder="招待するメールアドレス" id="inviteEmail" required />
-                        <button type="submit" class="btn btn-primary">招待を送る</button>
-                    </div>
-                </form>
-                <div id="inviteMessage" class="mt-2"></div>
+            <div class="input-group mt-2">
+              <textarea
+                id="description"
+                name="description"
+                class="form-control"
+                placeholder="説明を入力"
+                rows="3"
+              ></textarea>
             </div>
+            <div class="d-flex justify-content-end mt-2">
+              <button type="submit" id="addPlan" class="btn btn-primary">
+                追加
+              </button>
+            </div>
+          </form>
         </div>
-        <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
-        <!-- 旅行プラン -->
-        <!-- データベース上の候補地を羅列 -->
-        <div class="col-md-4">
-            <h3>候補地一覧</h3>
-            <ul class="list-group" id="enabled_candidateList">
-                {% for candidate in enabled_list %}
-                <li class="list-group-item candidate-item" id="{{ candidate.site_id }}">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <strong>{{ candidate.place_name }}</strong>
-                        <button class="btn btn-like" data-room-id="{{ room.id }}" data-site-id="{{ candidate.site_id }}">
-                            <i class="fa fa-thumbs-up"></i> いいね：{{ candidate.like }}
-                        </button>
-                    </div>
-                    <div class="details" style="display: none;">
-                        <p>概要：{{ candidate.description }}</p>
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
-            <form id="planForm" action="{{ url_for('plan.add_plan_manually', room_id=room.id) }}" method="POST">
-                <div class="input-group mt-2">
-                    <textarea id="place_name" name="place_name" class="form-control" placeholder="新しい候補地を入力" rows="1"></textarea>
-                </div>
-                <div class="input-group mt-2">
-                    <textarea id="description" name="description" class="form-control" placeholder="説明を入力" rows="3"></textarea>
-                </div>
-                <div class="d-flex justify-content-end mt-2">
-                    <button type="submit" id="addPlan" class="btn btn-primary">追加</button>
-                </div>
+
+        <!-- 詳細パネル（右） -->
+        <div class="col-md-6">
+          <div id="siteDetail" style="display: none;">
+            <h4 id="detailTitle"></h4>
+            <p id="detailDescription"></p>
+            <p>いいね数: <span id="detailLikeCount"></span></p>
+            <h5>コメント一覧</h5>
+            <ul id="detailCommentList" class="list-group mb-2"></ul>
+            <form id="detailCommentForm" class="input-group">
+              <input
+                type="text"
+                name="comment"
+                placeholder="コメントを追加"
+                class="form-control"
+                id="detailCommentInput"
+              />
+              <button type="submit" class="btn btn-primary btn-sm">
+                追加
+              </button>
             </form>
+          </div>
         </div>
+      </div>
     </div>
-    <!-- 右下に地図を表示するiframe -->
-    <div class="map-container" id="map-container">
-        <iframe src="{{ url_for('map.show_map', room_id=room.id) }}" width="100%" height="100%" frameborder="0"></iframe>
-    </div>
+
+    <!-- スクリプト類 -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        const socket = io();
-        const chatForm = document.getElementById("chat-form");
-        const messageInput = document.getElementById("message-input");
-        const chatBox = document.getElementById("chat-box");
-        const userName = "{{ user.name }}";
-        const room = "{{ room.id }}";
+      // ソケット通信初期化
+      const socket = io();
+      const chatForm = document.getElementById("chat-form");
+      const messageInput = document.getElementById("message-input");
+      const chatBox = document.getElementById("chat-box");
+      const userName = "{{ user.name }}";
+      const room = "{{ room.id }}";
 
-        // ルームに参加
-        socket.emit("join", { room: room });
+      // ルーム入室
+      socket.emit("join", { room: room });
 
-        chatForm.addEventListener("submit", function (event) {
-            event.preventDefault();
-            const message = messageInput.value.trim();
-            if (message === "") return;
-            socket.emit("send_message", {
-                user: userName,
-                message: message,
-                room: room,
-            });
-            messageInput.value = "";
+      // チャット送信
+      chatForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const message = messageInput.value.trim();
+        if (!message) return;
+        socket.emit("send_message", {
+          user: userName,
+          message: message,
+          room: room,
         });
-
-
-      // 簡単AI呼び出し用のイベントリスナー（送信者は現在のユーザーとし、メッセージ先頭に"@AI"を付与）
-      document
-        .getElementById("aiCallBtn")
-        .addEventListener("click", function () {
-          const startDate = document.getElementById("aiStartDate").value.trim();
-          const endDate = document.getElementById("aiEndDate").value.trim();
-          const departure = document.getElementById("aiDeparture").value.trim();
-          const destination = document
-            .getElementById("aiDestination")
-            .value.trim();
-          const cost = document.getElementById("aiCost").value.trim();
-          const note = document.getElementById("aiNote").value.trim();
-          if (
-            !startDate &&
-            !endDate &&
-            !departure &&
-            !destination &&
-            !cost &&
-            !note
-          )
-            return;
-
-          const dateText =
-            startDate && endDate
-              ? startDate + " ～ " + endDate
-              : startDate || endDate;
-          const aiMessage =
-            "@AI AI呼び出し要求:\n日程: " +
-            dateText +
-            "\n出発場所: " +
-            departure +
-            "\n目標場所: " +
-            destination +
-            "\n金額: " +
-            cost +
-            "\n備考: " +
-            note;
-          socket.emit("send_message", {
-            user: userName,
-            message: aiMessage,
-            room: room,
-          });
-
-          // 入力欄をクリア
-          document.getElementById("aiStartDate").value = "";
-          document.getElementById("aiEndDate").value = "";
-          document.getElementById("aiDeparture").value = "";
-          document.getElementById("aiDestination").value = "";
-          document.getElementById("aiCost").value = "";
-          document.getElementById("aiNote").value = "";
-        });
-
-              // jQuery UI datepicker の有効化
-      $(function () {
-        $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
-        $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+        messageInput.value = "";
       });
-      
-        $(document).ready(function () {
-            // 候補地一覧のリストを編集
-            function updateCandidateList(enabled_list) {
-                const candidateList = $("#enabled_candidateList");
-                candidateList.empty(); // 既存のリストをクリア
 
-                enabled_list.forEach(candidate => {
-                    const newItem = `
-                        <li class="list-group-item candidate-item" id="${candidate.site_id}">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <strong>${candidate.place_name}</strong>
-                                <button class="btn btn-like" data-room-id="${room}" data-site-id="${candidate.site_id}">
-                                    <i class="fa fa-thumbs-up"></i> いいね：${candidate.like}
-                                </button>
-                            </div>
-                            <div class="details" style="display: none;">
-                                <p>概要：${candidate.description}</p>
-                            </div>
-                        </li>
-                    `;
-                    candidateList.append(newItem);
+      // メッセージ受信
+      socket.on("receive_message", function (data) {
+        const messageElem = document.createElement("div");
+        messageElem.classList.add("message");
+        if (data.user === userName) {
+          messageElem.classList.add("user");
+        } else {
+          messageElem.classList.add("other");
+        }
+        messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
+        chatBox.appendChild(messageElem);
+        chatBox.scrollTop = chatBox.scrollHeight;
+      });
+    </script>
+
+    <script>
+      // 詳細パネルの要素
+      const siteDetail = document.getElementById("siteDetail");
+      const detailTitle = document.getElementById("detailTitle");
+      const detailDescription = document.getElementById("detailDescription");
+      const detailLikeCount = document.getElementById("detailLikeCount");
+      const detailCommentList = document.getElementById("detailCommentList");
+      let currentOpenSite = null;
+
+      // 候補地クリック→サイト情報をGETして反映
+      document.querySelectorAll(".site-item").forEach(item => {
+        item.addEventListener("click", () => {
+          const siteId = item.dataset.siteid;
+          // 同じサイトを再クリックなら閉じる
+          if (currentOpenSite === siteId) {
+            siteDetail.style.display = "none";
+            currentOpenSite = null;
+            return;
+          }
+          currentOpenSite = siteId;
+          // DBから最新情報を取得
+          fetch(`/candidate_site/${room}/${siteId}`, {
+            method: "GET",
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.error) {
+                alert("対象の候補地が見つかりません。");
+                return;
+              }
+              detailTitle.textContent = data.place_name;
+              detailDescription.textContent = data.description || "";
+              detailLikeCount.textContent = data.like;
+              detailCommentList.innerHTML = "";
+              if (data.comments) {
+                data.comments.forEach(c => {
+                  const li = document.createElement("li");
+                  li.className = "list-group-item py-1 px-2";
+                  li.textContent = c.comment + " - by " + (c.user_name || "Unknown");
+                  detailCommentList.appendChild(li);
                 });
-            }
-
-            // ページ読み込み時に候補地一覧を取得して表示
-            window.addEventListener('load', () => {
-                fetch('/get_enabled_sites')
-                    .then(response => response.json())
-                    .then(data => updateCandidateList(data))
-                    .catch(error => console.error('Error fetching candidate sites:', error));
-            });
-
-            // 新しく追加された項目にもクリックイベントを設定
-            $(document).on("click", ".list-group-item", function () {
-                $(this).find(".details").slideToggle();
-            });
-
-            // いいねボタンのクリックイベントを設定
-            $(document).on("click", ".btn-like", function (event) {
-                event.stopPropagation(); // 親要素のクリックイベントを防止
-                const button = $(this);
-                const roomId = button.data("room-id");
-                const siteId = button.data("site-id");
-                const isLiked = button.data("liked") || false;
-
-                if (isLiked) {
-                    // いいねを取り消す
-                    $.post(`/dislike_plan_item/${roomId}/${siteId}/dislike`, function () {
-                        button.data("liked", false);
-                        button.find("i").removeClass("fa-thumbs-down").addClass("fa-thumbs-up");
-                        button.removeClass("liked");
-                    });
-                } else {
-                    // いいねを追加
-                    $.post(`/like_plan_item/${roomId}/${siteId}/like`, function () {
-                        button.data("liked", true);
-                        button.find("i").removeClass("fa-thumbs-up").addClass("fa-thumbs-down");
-                        button.addClass("liked");
-                    });
-                }
-            });
-
-            // 地図の表示/非表示を切り替えるボタンのクリックイベントを設定
-            $("#toggle-map-btn").click(function () {
-                $("#map-container").toggle();
-            });
-                        // 地図のサイズをドラッグで変更可能にする
-            $("#map-container").resizable({
-                aspectRatio: true,
-                minWidth: 200,
-                minHeight: 200
+              }
+              siteDetail.style.display = "block";
             });
         });
+      });
+
+      // コメント投稿
+      const detailCommentForm = document.getElementById("detailCommentForm");
+      detailCommentForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const commentInput = document.getElementById("detailCommentInput");
+        const comment = commentInput.value.trim();
+        if (!comment || !currentOpenSite) return;
+
+        fetch(`/candidate_site/${room}/${currentOpenSite}/comment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ user_id: "{{ user.id }}", comment: comment }),
+        })
+          .then(response => {
+            if (response.ok) {
+              // 再度GETして最新状態に反映
+              return fetch(`/candidate_site/${room}/${currentOpenSite}`, {
+                method: "GET",
+              });
+            }
+          })
+          .then(res => (res ? res.json() : null))
+          .then(data => {
+            if (!data) return;
+            detailCommentList.innerHTML = "";
+            if (data.comments) {
+              data.comments.forEach(c => {
+                const li = document.createElement("li");
+                li.className = "list-group-item py-1 px-2";
+                li.textContent = c.comment + " - by " + (c.user_name || "Unknown");
+                detailCommentList.appendChild(li);
+              });
+            }
+            // 一覧側のコメント数表示を更新
+            const targetItem = document.querySelector(`.site-item[data-siteid="${currentOpenSite}"]`);
+            if (targetItem) {
+              const likeSpan = targetItem.querySelector(".like-count");
+              likeSpan.textContent = data.like;
+              const siteStrong = targetItem.querySelector("strong").textContent;
+              // 「 | コメント: xxx」を置き換えるため innerHTML再設定
+              // comments.lengthの数を使う
+              const commentCount = data.comments.length;
+              targetItem.innerHTML = `
+                <strong>${data.place_name}</strong>
+                | いいね: <span class="like-count">${data.like}</span>
+                | コメント: ${commentCount}
+                <button
+                  class="btn btn-sm like-btn"
+                  data-siteid="${data.id}"
+                  data-userid="{{ user.id }}"
+                  style="background-color: #ccc; margin-left: 10px;"
+                >
+                  ♥
+                </button>
+              `;
+              // 元のUIでユーザーのいいね状況があればそこに合わせてもよい
+              // ここでは簡易的に#cccで塗り直し、一応再度いいねボタンのイベントを付与
+              rebindLikeButton(targetItem.querySelector(".like-btn"));
+            }
+            commentInput.value = "";
+          });
+      });
+
+      // いいねボタンの再バインド用ヘルパー
+      function rebindLikeButton(btn) {
+        if (!btn) return;
+        btn.addEventListener("click", e => {
+          e.stopPropagation();
+          const siteId = btn.dataset.siteid;
+          const userId = btn.dataset.userid;
+          fetch(`/candidate_site/${room}/${siteId}/toggle_like`, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: new URLSearchParams({ user_id: userId }),
+          })
+            .then(r => r.json())
+            .then(data => {
+              if (data.message === "liked") {
+                btn.style.backgroundColor = "#ff99aa";
+              } else {
+                btn.style.backgroundColor = "#ccc";
+              }
+              // 一覧側
+              btn.closest("li").querySelector(".like-count").textContent = data.likeCount;
+              // 詳細パネルが開いていれば更新
+              if (currentOpenSite === siteId) {
+                detailLikeCount.textContent = data.likeCount;
+              }
+            });
+        });
+      }
+
+      // いいねトグル
+      document.querySelectorAll(".like-btn").forEach(btn => {
+        rebindLikeButton(btn);
+      });
     </script>
-</body>
+  </body>
 </html>
