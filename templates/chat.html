@@ -89,7 +89,7 @@
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
       <div class="mt-3">
-  
+
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
         <!-- 日程を開始日・終了日に分割 -->
@@ -162,7 +162,7 @@
           <ul id="planList" class="list-group sortable">
             <!-- 項目がここに追加されます -->
           </ul>
-          <form id="planForm" action="{{ url_for('plan.candidate_site',room_id=room.id) }}" method="POST">
+          <form id="planForm" action="{{ url_for('plan.add_plan_manually', room_id=room.id) }}" method="POST">
             <div class="input-group mt-2">
               <textarea
                 id="place_name"
@@ -198,10 +198,10 @@
           const chatBox = document.getElementById("chat-box");
           const userName = "{{ user.name }}";
           const room = "{{ room.id }}";
-    
+
           // ルームに参加
           socket.emit("join", { room: room });
-    
+
           chatForm.addEventListener("submit", function (event) {
             event.preventDefault();
             const message = messageInput.value.trim();
@@ -213,7 +213,7 @@
             });
             messageInput.value = "";
           });
-    
+
           socket.on("receive_message", function (data) {
             const messageElem = document.createElement("div");
             messageElem.classList.add("message");
@@ -226,13 +226,13 @@
             messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
             chatBox.appendChild(messageElem);
             chatBox.scrollTop = chatBox.scrollHeight;
-    
+
             // @AIからの旅行プランMarkdownを自動で3セクションに反映
             if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
               handleTravelPlanMarkdown(data.message);
             }
           });
-    
+
         </script>
         <script>
         </script>

@@ -87,10 +87,10 @@
               type="checkbox"
               name="selected_friends"
               id="friend_{{ friend.id }}"
-              value="{{ friend.friend_email }}"
+              value="{{ friend.display_name }}"
             />
             <label class="form-check-label" for="friend_{{ friend.id }}">
-              {{ friend.friend_name }} ({{ friend.friend_email }})
+              {{ friend.display_name }}
             </label>
           </div>
           {% endfor %} {% else %}
