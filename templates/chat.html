@@ -135,7 +135,7 @@
       <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
         >旅行一覧へ</a
       >
-      <a href="{{ url_for('map.show_map', room_id=room.id) }}" class="btn btn-primary"
+            <a href="{{ url_for('map.show_map', room_id=room.id) }}" class="btn btn-primary"
       >地図を表示</a>
       <div class="invite-section mt-3">
         <h5>グループ招待</h5>
@@ -193,9 +193,10 @@
           </div>
         </div>
         <!-- 費用 -->
-        <!--<div class="col-md-4">
+        <div class="col-md-4">
           <h3>費用</h3>
           <ul id="costList" class="list-group sortable">
+            <!-- 項目がここに追加されます -->
           </ul>
           <div class="input-group mt-2">
             <input
@@ -205,26 +206,11 @@
               placeholder="新しい費用を入力"
             />
             <button id="addCost" class="btn btn-secondary">追加</button>
-          </div> -->
-
-          <!-- 全候補地 -->
-          <div class="col-md-4">
-          <h3>全候補地</h3>
-          <ul id="allplanList" class="list-group sortable">
-            <!-- 項目がここに追加されます -->
-          </ul>
-          <div class="input-group mt-2">
-            <input
-              id="allplanInput"
-              type="text"
-              class="form-control"
-              placeholder="新しい候補地を入力"
-            />
-            <button id="addAllplan" class="btn btn-secondary">追加</button>
+          </div>
         </div>
       </div>
-      <button id="saveTravelListPlan" class="btn btn-primary btn-sm mt-2">Travel list保存</button>
-      <button id="saveTravelPlan" class="btn btn-primary btn-sm mt-2">保存</button>
+      <button id="saveTravelListPlan" class="btn btn-primary mt-2">Travel list保存</button>
+      <button id="saveTravelPlan" class="btn btn-primary mt-2">保存</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -350,7 +336,7 @@
           $("#planInput").val("");
         }
       });
-      /*$("#addCost").click(function () {
+      $("#addCost").click(function () {
         const text = $("#costInput").val().trim();
         if (text !== "") {
           $("#costList").append(
@@ -359,17 +345,6 @@
               ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
           );
           $("#costInput").val("");
-        }
-      });*/
-      $("#addAllplan").click(function () {
-        const text = $("#allplanInput").val().trim();
-        if (text !== "") {
-          $("#allplanList").append(
-            '<li class="list-group-item">' +
-              text +
-              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
-          );
-          $("#allplanInput").val("");
         }
       });
 
@@ -429,13 +404,8 @@
             return $(this).clone().children().remove().end().text().trim();
           })
           .get();
-        /*let costItems = $("#costList li")
+        let costItems = $("#costList li")
           .map(function () {
-            return $(this).clone().children().remove().end().text().trim();
-          })
-          .get();*/
-        let allplanItems = overviewItems.concat(planItems);
-        　.map(function () {
             return $(this).clone().children().remove().end().text().trim();
           })
           .get();
@@ -445,10 +415,8 @@
             overviewItems.join("\n") +
             "\n\n旅行プラン:\n" +
             planItems.join("\n") +
-            /* "\n\n費用:\n" +
-            costItems.join("\n") */
-            "\n\n全候補地:\n" +
-            allplanItems.join("\n")
+            "\n\n費用:\n" +
+            costItems.join("\n")
         );
       });
 

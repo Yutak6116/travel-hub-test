@@ -15,7 +15,7 @@ flow = Flow.from_client_secrets_file(
 
 @oauth_bp.route('/')
 def index():
-    return render_template('example.html')
+    return render_template('index.html')
 
 @oauth_bp.route('/login')
 def login():
