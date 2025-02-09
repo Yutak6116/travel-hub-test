@@ -1,5 +1,8 @@
 from extensions import db
 import datetime
+from sqlalchemy import create_engine
+
+engine = create_engine('sqlite:///travel.db', echo=True)
 
 # フレンドテーブルのモデル
 class Friend(db.Model):

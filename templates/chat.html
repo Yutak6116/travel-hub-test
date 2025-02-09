@@ -12,7 +12,6 @@
     body {
       background-color: #EFE9D5;
       font-family: "Noto Sans JP", sans-serif;
-      padding-top: 100px;
     }
 
     /* ヘッダー部分 */
@@ -103,7 +102,7 @@
 
 <body>
   <div class="container">
-    <div class="chat-header fixed-top">
+    <div class="chat-header navbar-fixed-top">
       <div class="row">
         <div class="col-2 justify-content-start p-0">
           <a href="{{ url_for('group.travels') }}" class="custom-link">
@@ -117,8 +116,6 @@
           <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
         </div>
       </div>
-      <!-- <h1>{{ room.name }}</h1> -->
-      <!-- <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p> -->
     </div>
     <div id="chat-box">
       {% for msg in history %}
@@ -253,6 +250,9 @@
           </div>
         </div>
       </div>
+      <!-- 呼び出しシステムとの兼ね合いがわからない -->
+      <input id="aiCost" type="text" class="form-control" placeholder="金額" />
+      <input id="aiNote" type="text" class="form-control" placeholder="備考" />
       <div class="btn-group float-end" role="group" aria-label="Basic example">
         <button id="saveTravelPlan" class="btn btn-primary m-1">保存</button>
         <button id="aiCallBtn" class="btn btn-primary m-1">AI呼び出し送信</button>

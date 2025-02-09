@@ -1,171 +1,146 @@
 <!DOCTYPE html>
 <html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <title>グループ作成</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-    <link
-      rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
-    />
-  </head>
-  <body>
-    {% include '_navbar.html' %}
 
-    <div class="container mt-4">
-      <h1 class="mb-4">グループ作成</h1>
-      <form
-        method="POST"
-        action="{{ url_for('group.group_creation') }}"
-        enctype="multipart/form-data"
-      >
-        <!-- 旅行のタイトル -->
-        <div class="form-group">
-          <label for="travel_title">旅行のタイトル</label>
-          <input
-            type="text"
-            class="form-control"
-            id="travel_title"
-            name="travel_title"
-            placeholder="旅行のタイトルを入力"
-          />
+<head>
+  <meta charset="UTF-8" />
+  <title>グループ作成</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css" />
+  <style>
+    body {
+      background-color: #EFE9D5;
+    }
+
+    .rounded-container {
+      background-color: white;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+      background-color: #497D74;
+      border-color: #497D74;
+
+    }
+
+    /* .btn-primary:focus,
+    .btn-primary:not(.collapsed) {
+      background-color: #3d6961;
+      color: #ffffff;
+    } */
+  </style>
+</head>
+
+<body>
+  {% include '_navbar.html' %}
+
+  <div class="container mt-4 p-4 rounded-container">
+    <h1 class="mb-4">グループ作成</h1>
+    <form method="POST" action="{{ url_for('group.group_creation') }}" enctype="multipart/form-data">
+      <!-- 旅行のタイトル -->
+      <div class="form-group">
+        <label for="travel_title">旅行のタイトル</label>
+        <input type="text" class="form-control" id="travel_title" name="travel_title" placeholder="旅行のタイトルを入力" />
+      </div>
+      <hr />
+
+      <!-- 旅行のアイコンアップロード -->
+      <div class="form-group">
+        <label for="travel_icon">旅行のアイコン</label>
+        <input type="file" class="form-control-file" id="travel_icon" name="travel_icon" accept="image/*" />
+      </div>
+      <hr />
+
+      <!-- 日程（始まり） -->
+      <div class="form-group" id="start_date_container">
+        <label for="start_date">始まりの日程</label>
+        <input type="text" class="form-control" id="start_date" name="start_date" readonly placeholder="日付を選択" />
+      </div>
+
+      <!-- 日程（終わり） -->
+      <div class="form-group" id="end_date_container">
+        <label for="end_date">終わりの日程</label>
+        <input type="text" class="form-control" id="end_date" name="end_date" readonly placeholder="日付を選択" />
+      </div>
+      <hr />
+
+      <!-- フレンド一覧 -->
+      <div class="form-group">
+        <label>メンバー選択（フレンド一覧）</label>
+        {% if friends %} {% for friend in friends %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="selected_friends" id="friend_{{ friend.id }}"
+            value="{{ friend.friend_email }}" />
+          <label class="form-check-label" for="friend_{{ friend.id }}">
+            {{ friend.friend_name }} ({{ friend.friend_email }})
+          </label>
         </div>
+        {% endfor %} {% else %}
+        <p>フレンドが見つかりません。</p>
+        {% endif %}
+      </div>
+      <hr />
 
-        <!-- 旅行のアイコンアップロード -->
-        <div class="form-group">
-          <label for="travel_icon">旅行のアイコン</label>
-          <input
-            type="file"
-            class="form-control-file"
-            id="travel_icon"
-            name="travel_icon"
-            accept="image/*"
-          />
-        </div>
-
-        <!-- 日程（始まり） -->
-        <div class="form-group" id="start_date_container">
-          <label for="start_date">始まりの日程</label>
-          <input
-            type="text"
-            class="form-control"
-            id="start_date"
-            name="start_date"
-            readonly
-            placeholder="日付を選択"
-          />
-        </div>
-
-        <!-- 日程（終わり） -->
-        <div class="form-group" id="end_date_container">
-          <label for="end_date">終わりの日程</label>
-          <input
-            type="text"
-            class="form-control"
-            id="end_date"
-            name="end_date"
-            readonly
-            placeholder="日付を選択"
-          />
-        </div>
-
-        <!-- フレンド一覧 -->
-        <div class="form-group">
-          <label>メンバー選択（フレンド一覧）</label>
-          {% if friends %} {% for friend in friends %}
-          <div class="form-check">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="selected_friends"
-              id="friend_{{ friend.id }}"
-              value="{{ friend.friend_email }}"
-            />
-            <label class="form-check-label" for="friend_{{ friend.id }}">
-              {{ friend.friend_name }} ({{ friend.friend_email }})
-            </label>
+      <!-- google account での招待 -->
+      <div class="form-group">
+        <label>フレンド以外のメンバーを招待（Googleアカウントのメールアドレス）</label>
+        <div id="invite_emails_container">
+          <div class="input-group mb-2">
+            <input type="email" name="invite_emails[]" class="form-control" placeholder="例：user1@gmail.com" />
           </div>
-          {% endfor %} {% else %}
-          <p>フレンドが見つかりません。</p>
-          {% endif %}
         </div>
+        <button type="button" class="btn btn-outline-secondary mt-2" id="add-invite-email-btn">
+          +
+        </button>
+      </div>
 
-        <!-- google account での招待 -->
-        <div class="form-group">
-          <label
-            >フレンド以外のメンバーを招待（Googleアカウントのメールアドレス）</label
-          >
-          <div id="invite_emails_container">
-            <div class="input-group mb-2">
-              <input
-                type="email"
-                name="invite_emails[]"
-                class="form-control"
-                placeholder="例：user1@gmail.com"
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            class="btn btn-outline-secondary mt-2"
-            id="add-invite-email-btn"
-          >
-            +
-          </button>
-        </div>
+      <script>
+        document
+          .getElementById("add-invite-email-btn")
+          .addEventListener("click", function () {
+            var container = document.getElementById(
+              "invite_emails_container"
+            );
+            var inputGroup = document.createElement("div");
+            inputGroup.className = "input-group mb-2";
+            inputGroup.innerHTML =
+              '<input type="email" name="invite_emails[]" class="form-control" placeholder="例：user@example.com">';
+            container.appendChild(inputGroup);
+          });
+      </script>
 
-        <script>
-          document
-            .getElementById("add-invite-email-btn")
-            .addEventListener("click", function () {
-              var container = document.getElementById(
-                "invite_emails_container"
-              );
-              var inputGroup = document.createElement("div");
-              inputGroup.className = "input-group mb-2";
-              inputGroup.innerHTML =
-                '<input type="email" name="invite_emails[]" class="form-control" placeholder="例：user@example.com">';
-              container.appendChild(inputGroup);
-            });
-        </script>
+      <button type="submit" class="btn btn-primary">グループ作成</button>
+    </form>
+  </div>
 
-        <button type="submit" class="btn btn-primary">グループ作成</button>
-      </form>
-    </div>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script>
+    // Flatpickrのインスタンスを生成
+    var startPicker = flatpickr("#start_date", {});
+    var endPicker = flatpickr("#end_date", {});
 
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    <script>
-      // Flatpickrのインスタンスを生成
-      var startPicker = flatpickr("#start_date", {});
-      var endPicker = flatpickr("#end_date", {});
+    // コンテナ全体をクリックしてカレンダーを開く
+    document
+      .getElementById("start_date_container")
+      .addEventListener("click", function (e) {
+        // イベントがinput自身のクリックで二重に起こらないように
+        if (e.target.id !== "start_date") {
+          startPicker.open();
+        }
+      });
+    document
+      .getElementById("end_date_container")
+      .addEventListener("click", function (e) {
+        if (e.target.id !== "end_date") {
+          endPicker.open();
+        }
+      });
+  </script>
+</body>
 
-      // コンテナ全体をクリックしてカレンダーを開く
-      document
-        .getElementById("start_date_container")
-        .addEventListener("click", function (e) {
-          // イベントがinput自身のクリックで二重に起こらないように
-          if (e.target.id !== "start_date") {
-            startPicker.open();
-          }
-        });
-      document
-        .getElementById("end_date_container")
-        .addEventListener("click", function (e) {
-          if (e.target.id !== "end_date") {
-            endPicker.open();
-          }
-        });
-    </script>
-  </body>
 </html>
