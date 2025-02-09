@@ -1,9 +1,9 @@
 import re
 
-from flask import Blueprint, redirect, request
+from flask import Blueprint, jsonify, redirect, request
 
 from extensions import db
-from models import CandidateSite, Comment
+from models import CandidateSite, CandidateSiteLike, Comment
 from services.place_service import get_place_coordinates
 
 plan_bp = Blueprint("plan", __name__)
@@ -156,6 +156,33 @@ def dislike_plan_item(room_id, site_id):
     site.delete_like()
     db.session.commit()
     return redirect("/chat/" + str(room_id))
+
+
+@plan_bp.route(
+    "/candidate_site/<int:room_id>/<int:site_id>/toggle_like", methods=["POST"]
+)
+def toggle_like(room_id, site_id):
+    current_user_id = request.form.get("user_id")
+    like_entry = CandidateSiteLike.query.filter_by(
+        user_id=current_user_id, site_id=site_id
+    ).first()
+    site = CandidateSite.query.get(site_id)
+    if not site:
+        return jsonify({"error": "Site not found"}), 404
+
+    if like_entry:
+        # OFF
+        db.session.delete(like_entry)
+        site.like -= 1 if site.like > 0 else 0
+        db.session.commit()
+        return jsonify({"message": "disliked", "likeCount": site.like})
+    else:
+        # ON
+        new_like = CandidateSiteLike(user_id=current_user_id, site_id=site_id)
+        db.session.add(new_like)
+        site.like += 1
+        db.session.commit()
+        return jsonify({"message": "liked", "likeCount": site.like})
 
 
 # コメントを追加

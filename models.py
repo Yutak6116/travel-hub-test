@@ -195,3 +195,17 @@ class AcceptedSchedule(db.Model):
         for field in ["site_id", "group_id", "date", "order"]:
             if field in data:
                 setattr(self, field, data[field])
+
+
+class CandidateSiteLike(db.Model):
+    __tablename__ = "candidate_site_like"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(
+        db.Integer, db.ForeignKey("user.id"), nullable=False
+    )
+    site_id: Mapped[int] = mapped_column(
+        db.Integer, db.ForeignKey("candidate_site.id"), nullable=False
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        db.DateTime, default=datetime.datetime.now
+    )
