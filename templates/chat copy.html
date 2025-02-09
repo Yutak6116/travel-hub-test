@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ room.name }} - チャットルーム</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+    />
+    <style>
+      body {
+        background-color: #f7f7f7;
+      }
+      /* ヘッダー部分 */
+      .chat-header {
+        background-color: #007bff;
+        color: #fff;
+        padding: 20px;
+        text-align: center;
+        border-radius: 0 0 10px 10px;
+        margin-bottom: 20px;
+      }
+      /* チャットボックス */
+      #chat-box {
+        background-color: #fff;
+        border: none;
+        border-radius: 10px;
+        height: 400px;
+        overflow-y: auto;
+        padding: 15px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      /* メッセージバブル */
+      .message {
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        border-radius: 20px;
+        max-width: 70%;
+        word-wrap: break-word;
+      }
+      .message.user {
+        background-color: #007bff;
+        color: #fff;
+        margin-left: auto;
+      }
+      .message.other {
+        background-color: #e9e9eb;
+        color: #333;
+        margin-right: auto;
+      }
+      /* 入力フォーム */
+      #chat-form .form-control {
+        border-radius: 20px 0 0 20px;
+      }
+      #chat-form .btn {
+        border-radius: 0 20px 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="chat-header">
+        <h1>{{ room.name }}</h1>
+        <p>ログインユーザー: {{ user.name }} ({{ user.email }})</p>
+      </div>
+      <div id="chat-box">
+        {% for msg in history %}
+        <div
+          class="message {% if msg.username == user.name %}user{% else %}other{% endif %}"
+        >
+          {{ msg.username }}: {{ msg.message | safe }}
+        </div>
+        {% endfor %}
+      </div>
+      <form id="chat-form" class="input-group">
+        <input
+          id="message-input"
+          type="text"
+          class="form-control"
+          placeholder="メッセージを入力"
+          autocomplete="off"
+        />
+        <button class="btn btn-primary" type="submit">送信</button>
+      </form>
+      <div class="mt-3">
+  
+      <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
+      <div class="input-group mt-4">
+        <!-- 日程を開始日・終了日に分割 -->
+        <input
+          id="aiStartDate"
+          type="text"
+          class="form-control"
+          placeholder="開始日（例: 2023-10-31）"
+        />
+        <input
+          id="aiEndDate"
+          type="text"
+          class="form-control"
+          placeholder="終了日（例: 2023-11-05）"
+        />
+        <input
+          id="aiDeparture"
+          type="text"
+          class="form-control"
+          placeholder="出発場所"
+        />
+        <input
+          id="aiDestination"
+          type="text"
+          class="form-control"
+          placeholder="目標場所"
+        />
+        <input
+          id="aiCost"
+          type="text"
+          class="form-control"
+          placeholder="金額"
+        />
+        <input
+          id="aiNote"
+          type="text"
+          class="form-control"
+          placeholder="備考"
+        />
+        <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
+      </div>
+
+      <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
+        >旅行一覧へ</a
+      >
+            <a href="{{ url_for('map.show_map', room_id=room.id) }}" class="btn btn-primary"
+      >地図を表示</a>
+      <div class="invite-section mt-3">
+        <h5>グループ招待</h5>
+        <form id="inviteForm">
+          <div class="input-group">
+            <input
+              type="email"
+              class="form-control"
+              placeholder="招待するメールアドレス"
+              id="inviteEmail"
+              required
+            />
+            <button type="submit" class="btn btn-primary">招待を送る</button>
+          </div>
+        </form>
+        <div id="inviteMessage" class="mt-2"></div>
+      </div>
+
+    </div>
+    <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
+        <!-- 旅行プラン -->
+        <div class="col-md-4">
+          <h3>旅行プラン</h3>
+          <ul id="planList" class="list-group sortable">
+            <!-- 項目がここに追加されます -->
+          </ul>
+          <div class="input-group mt-2">
+            <input
+              id="planInput"
+              type="text"
+              class="form-control"
+              placeholder="新しい旅行プランを入力"
+            />
+            </div>
+            <div class="input-group mt-2">
+              <input
+              id="descreption"
+              type="text"
+              class="form-control"
+              placeholder="説明を入力"
+              /> 
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+      const socket = io();
+      const chatForm = document.getElementById("chat-form");
+      const messageInput = document.getElementById("message-input");
+      const chatBox = document.getElementById("chat-box");
+      const userName = "{{ user.name }}";
+      const room = "{{ room.id }}";
+
+      // ルームに参加
+      socket.emit("join", { room: room });
+
+      chatForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        const message = messageInput.value.trim();
+        if (message === "") return;
+        socket.emit("send_message", {
+          user: userName,
+          message: message,
+          room: room,
+        });
+        messageInput.value = "";
+      });
+
+      // socket.on("receive_message", function (data) {
+      //   const messageElem = document.createElement("div");
+      //   messageElem.classList.add("message");
+      //   if (data.user === userName) {
+      //     messageElem.classList.add("user");
+      //   } else {
+      //     messageElem.classList.add("other");
+      //   }
+      //   // MarkdownをHTMLに変換して表示
+      //   messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
+      //   chatBox.appendChild(messageElem);
+      //   chatBox.scrollTop = chatBox.scrollHeight;
+
+      //   // @AIからの旅行プランMarkdownを自動で3セクションに反映
+      //   if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
+      //     handleTravelPlanMarkdown(data.message);
+      //   }
+      // });
+
+      // 旅行プランのMarkdownからリスト項目を抽出し、ドラッグアンドドロップリストに反映する関数
+      function updateTravelPlanList(markdownText) {
+        // 例として、行頭が "-" または "*" で始まる行を項目とみなす
+        const lines = markdownText.split("\n");
+        const items = lines.filter((line) => line.trim().match(/^(\-|\*)\s+/));
+        const list = document.getElementById("travelPlanList");
+        list.innerHTML = ""; // 既存のリストをクリア
+        items.forEach(function (item) {
+          // 行頭のマーカーとスペースを除去
+          const text = item.replace(/^(\-|\*)\s+/, "").trim();
+          const li = document.createElement("li");
+          li.className = "list-group-item";
+          li.textContent = text;
+          list.appendChild(li);
+        });
+        // jQuery UIでソート可能にする
+        $("#travelPlanList").sortable();
+        $("#travelPlanList").disableSelection();
+      }
+
+      // 保存ボタンのクリック処理（例：現在のリスト順をサーバーへ送信する等）
+      document
+        .getElementById("saveTravelPlan")
+        .addEventListener("click", function () {
+          let items = [];
+          $("#travelPlanList li").each(function () {
+            items.push($(this).text());
+          });
+          // AJAX送信例（必要に応じて実装）
+          alert(
+            "旅行プラン（順序付き）が保存されました。\n" + items.join("\n")
+          );
+        });
+
+      // 関数：指定したulの各liに削除ボタンを付与
+      function addDeleteButton(listSelector) {
+        $(listSelector + " li").each(function () {
+          if ($(this).find(".delete-btn").length === 0) {
+            $(this).append(
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button>'
+            );
+          }
+        });
+      }
+
+
+      // 指定したul要素の内容を、与えられたitem配列で更新する関数
+      function updateList(selector, items) {
+        const list = $(selector);
+        list.empty();
+        items.forEach(function (item) {
+          list.append(
+            '<li class="list-group-item">' +
+              item +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
+        });
+        // ソート可能処理の再設定
+        $(selector).sortable();
+        $(selector).disableSelection();
+      }
+
+
+
+      // 既存のsocket.on("receive_message")処理内で、@AIからの旅行プラン情報の場合に利用
+      socket.on("receive_message", function (data) {
+        const messageElem = document.createElement("div");
+        messageElem.classList.add("message");
+        if (data.user === userName) {
+          messageElem.classList.add("user");
+        } else {
+          messageElem.classList.add("other");
+        }
+        messageElem.innerHTML = data.user + ": " + marked.parse(data.message);
+        chatBox.appendChild(messageElem);
+        chatBox.scrollTop = chatBox.scrollHeight;
+
+        // AIからの旅行プランMarkdownを自動で3セクションに反映
+        if (data.user === "travel AI" && data.message.includes("旅行プラン")) {
+          handleTravelPlanMarkdown(data.message);
+        }
+      });
+
+      // 簡単AI呼び出し用のイベントリスナー（送信者は現在のユーザーとし、メッセージ先頭に"@AI"を付与）
+      document
+        .getElementById("aiCallBtn")
+        .addEventListener("click", function () {
+          const startDate = document.getElementById("aiStartDate").value.trim();
+          const endDate = document.getElementById("aiEndDate").value.trim();
+          const departure = document.getElementById("aiDeparture").value.trim();
+          const destination = document
+            .getElementById("aiDestination")
+            .value.trim();
+          const cost = document.getElementById("aiCost").value.trim();
+          const note = document.getElementById("aiNote").value.trim();
+          if (
+            !startDate &&
+            !endDate &&
+            !departure &&
+            !destination &&
+            !cost &&
+            !note
+          )
+            return;
+
+          const dateText =
+            startDate && endDate
+              ? startDate + " ～ " + endDate
+              : startDate || endDate;
+          const aiMessage =
+            "@AI AI呼び出し要求:\n日程: " +
+            dateText +
+            "\n出発場所: " +
+            departure +
+            "\n目標場所: " +
+            destination +
+            "\n金額: " +
+            cost +
+            "\n備考: " +
+            note;
+          socket.emit("send_message", {
+            user: userName,
+            message: aiMessage,
+            room: room,
+          });
+
+          // 入力欄をクリア
+          document.getElementById("aiStartDate").value = "";
+          document.getElementById("aiEndDate").value = "";
+          document.getElementById("aiDeparture").value = "";
+          document.getElementById("aiDestination").value = "";
+          document.getElementById("aiCost").value = "";
+          document.getElementById("aiNote").value = "";
+        });
+
+      // jQuery UI datepicker の有効化
+      $(function () {
+        $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
+        $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+      });
+
+      // 招待送信用のAJAX処理の例
+      $("#inviteForm").submit(function (e) {
+        e.preventDefault();
+        var email = $("#inviteEmail").val().trim();
+        if (!email) {
+          return;
+        }
+        $.ajax({
+          url: "{{ url_for('chat.chat_invite', room_id=room.id) }}", // エンドポイント名を修正
+          method: "POST",
+          data: { invite_email: email },
+          success: function (response) {
+            $("#inviteMessage")
+              .text("招待を送信しました。")
+              .removeClass("text-danger")
+              .addClass("text-success");
+            $("#inviteEmail").val("");
+          },
+          error: function () {
+            $("#inviteMessage")
+              .text("招待の送信に失敗しました。")
+              .removeClass("text-success")
+              .addClass("text-danger");
+          },
+        });
+      });
+    </script>
+    <script>
+
+    </script>
+  </body>
+</html>

@@ -30,7 +30,7 @@ app.register_blueprint(profile_bp)
 import routes
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.drop_all()  # 既存のテーブルを削除
-        db.create_all()  # 新しいスキーマでテーブル作成
+    # with app.app_context():
+    #     db.drop_all()  # 既存のテーブルを削除
+    #     db.create_all()  # 新しいスキーマでテーブル作成
     socketio.run(app, debug=True)

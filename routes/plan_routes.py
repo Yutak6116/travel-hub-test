@@ -23,8 +23,6 @@ def extract_destinations_and_purposes(travel_plan_text):
     
     if purpose_match:
         purpose_list = [item.strip() for item in purpose_match.group(1).split(',')]
-        
-    print(destination_list, purpose_list)
     
     return destination_list, purpose_list
 
