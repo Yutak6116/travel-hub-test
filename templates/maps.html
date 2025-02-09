@@ -30,10 +30,10 @@
 </head>
 <body>
     <div class="tab-container">
-        <button class="tab-button active" onclick="switchTab('travel-plan')">旅程</button>
-        <button class="tab-button" onclick="switchTab('all-places')">全候補地</button>
+        <button class="tab-button" onclick="switchTab('travel-plan')">旅程</button>
+        <button class="tab-button active" onclick="switchTab('all-places')">全候補地</button>
         <!-- チャットに戻るボタン -->
-        <a href="{{ url_for('chat.chat', room_id=room_id) }}" class="btn btn-primary" style="margin-left: 10px;">チャットに戻る</a>
+        <!--<a href="{{ url_for('chat.chat', room_id=room_id) }}" class="btn btn-primary" style="margin-left: 10px;">チャットに戻る</a>-->
     </div>
     
     <div id="map"></div>
@@ -54,8 +54,8 @@
                 center: defaultCenter,
             });
 
-            // planmarkerを初期化
-            showTravelPlanMarkers();
+            // 全候補地のマーカを初期表示
+            showAllPlacesMarkers();
         }
 
         // タブの切り替え

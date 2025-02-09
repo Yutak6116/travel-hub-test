@@ -88,8 +88,7 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
-      <div class="mt-3">
-  
+
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
         <!-- 日程を開始日・終了日に分割 -->
@@ -135,8 +134,6 @@
       <a href="{{ url_for('group.travels') }}" class="btn btn-secondary mt-3"
         >旅行一覧へ</a
       >
-            <a href="{{ url_for('map.show_map', room_id=room.id) }}" class="btn btn-primary"
-      >地図を表示</a>
       <div class="invite-section mt-3">
         <h5>グループ招待</h5>
         <form id="inviteForm">
@@ -153,9 +150,27 @@
         </form>
         <div id="inviteMessage" class="mt-2"></div>
       </div>
-
     </div>
     <!-- 旅行プラン表示＆編集セクション（ドラッグアンドドロップリスト） -->
+    <div class="container mt-4">
+      <h2>旅行プラン</h2>
+      <div class="row">
+        <!-- 概要 -->
+        <div class="col-md-4">
+          <h3>概要</h3>
+          <ul id="overviewList" class="list-group sortable">
+            <!-- 項目がここに追加されます -->
+          </ul>
+          <div class="input-group mt-2">
+            <input
+              id="overviewInput"
+              type="text"
+              class="form-control"
+              placeholder="新しい概要を入力"
+            />
+            <button id="addOverview" class="btn btn-secondary">追加</button>
+          </div>
+        </div>
         <!-- 旅行プラン -->
         <div class="col-md-4">
           <h3>旅行プラン</h3>
@@ -169,15 +184,27 @@
               class="form-control"
               placeholder="新しい旅行プランを入力"
             />
-            </div>
-            <div class="input-group mt-2">
-              <input
-              id="descreption"
+            <button id="addPlan" class="btn btn-secondary">追加</button>
+          </div>
+        </div>
+        <!-- 費用 -->
+        <div class="col-md-4">
+          <h3>費用</h3>
+          <ul id="costList" class="list-group sortable">
+            <!-- 項目がここに追加されます -->
+          </ul>
+          <div class="input-group mt-2">
+            <input
+              id="costInput"
               type="text"
               class="form-control"
-              placeholder="説明を入力"
-              /> 
+              placeholder="新しい費用を入力"
+            />
+            <button id="addCost" class="btn btn-secondary">追加</button>
+          </div>
         </div>
+      </div>
+      <button id="saveTravelPlan" class="btn btn-primary mt-2">保存</button>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -271,6 +298,72 @@
         });
       }
 
+      // ドラッグアンドドロップ可能にする
+      $(".sortable").sortable();
+      $(".sortable").disableSelection();
+
+      // 各項目の削除処理
+      $(document).on("click", ".delete-btn", function () {
+        $(this).closest("li").remove();
+      });
+
+      // 新規追加ボタンの処理
+      $("#addOverview").click(function () {
+        const text = $("#overviewInput").val().trim();
+        if (text !== "") {
+          $("#overviewList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
+          $("#overviewInput").val("");
+        }
+      });
+      $("#addPlan").click(function () {
+        const text = $("#planInput").val().trim();
+        if (text !== "") {
+          $("#planList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
+          $("#planInput").val("");
+        }
+      });
+      $("#addCost").click(function () {
+        const text = $("#costInput").val().trim();
+        if (text !== "") {
+          $("#costList").append(
+            '<li class="list-group-item">' +
+              text +
+              ' <button class="btn btn-danger btn-sm float-end delete-btn">×</button></li>'
+          );
+          $("#costInput").val("");
+        }
+      });
+
+      // Markdownの旅行プラン情報をセクション毎にパースし、リストに反映する
+      function parseTravelPlanSections(markdownText) {
+        // 初期化
+        const sections = { overview: [], plan: [], cost: [] };
+        let currentSection = null;
+        const lines = markdownText.split("\n");
+        lines.forEach((line) => {
+          // 見出しによりセクション切替
+          if (line.includes("**概要**")) {
+            currentSection = "overview";
+          } else if (line.includes("**旅行プラン**")) {
+            currentSection = "plan";
+          } else if (currentSection && line.trim().match(/^(\-|\*)\s+/)) {
+            const item = line.replace(/^(\-|\*)\s+/, "").trim();
+            sections[currentSection].push(item);
+          }
+        });
+        // リスト更新
+        updateList("#overviewList", sections.overview);
+        updateList("#planList", sections.plan);
+        updateList("#costList", sections.cost);
+      }
 
       // 指定したul要素の内容を、与えられたitem配列で更新する関数
       function updateList(selector, items) {
@@ -288,7 +381,38 @@
         $(selector).disableSelection();
       }
 
+      // AIからの旅行プランMarkdownを受けた場合、以下でパース
+      function handleTravelPlanMarkdown(markdownText) {
+        parseTravelPlanSections(markdownText);
+      }
 
+      // 保存ボタンのクリック処理（例：現在のリスト順をサーバーへ送信する等）
+      $("#saveTravelPlan").click(function () {
+        let overviewItems = $("#overviewList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
+        let planItems = $("#planList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
+        let costItems = $("#costList li")
+          .map(function () {
+            return $(this).clone().children().remove().end().text().trim();
+          })
+          .get();
+        // AJAX送信例（必要に応じて実装）
+        alert(
+          "保存されました。\n概要:\n" +
+            overviewItems.join("\n") +
+            "\n\n旅行プラン:\n" +
+            planItems.join("\n") +
+            "\n\n費用:\n" +
+            costItems.join("\n")
+        );
+      });
 
       // 既存のsocket.on("receive_message")処理内で、@AIからの旅行プラン情報の場合に利用
       socket.on("receive_message", function (data) {
@@ -395,7 +519,13 @@
       });
     </script>
     <script>
-
+      // 画面読み込み時にDBから取得した旅行プランがあればパース
+      window.addEventListener("load", function () {
+        var travelPlanMarkdown = {{ travel_plan_markdown|tojson|safe }};
+        if (travelPlanMarkdown) {
+          handleTravelPlanMarkdown(travelPlanMarkdown);
+        }
+      });
     </script>
   </body>
 </html>

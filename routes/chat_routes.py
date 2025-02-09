@@ -2,7 +2,7 @@ from flask import Blueprint, redirect, url_for, session, request, render_templat
 from flask_socketio import emit, join_room
 import markdown
 from extensions import db, socketio
-from models import TravelGroup, GroupInvitation, ChatMessage, TravelPlan
+from models import TravelGroup, GroupInvitation, ChatMessage, CandidateSite, AcceptedSchedule
 import requests  # 追加
 
 chat_bp = Blueprint('chat', __name__)
@@ -34,9 +34,50 @@ def chat(room_id):
             'message': msg_html
         })
         # 最新のTravelPlanを取得（存在すれば）
-    travel_plan = TravelPlan.query.filter_by(room_id=room_id).order_by(TravelPlan.id.desc()).first()
-    travel_plan_markdown = travel_plan.markdown if travel_plan else ""
-    return render_template('chat.html', user=user_info, history=history, room=room, travel_plan_markdown=travel_plan_markdown)
+    # あげられている候補地
+    enabled_site = CandidateSite.query.filter_by(room_id=room_id, enable=True).order_by(CandidateSite.like.desc()).all()
+    # ごみ箱行きになった候補地
+    disabled_site = CandidateSite.query.filter_by(room_id=room_id, enable=False).order_by(CandidateSite.like.desc()).all()
+    # 実際の旅行プラン
+    accepted_site = AcceptedSchedule.query.filter_by(room_id=room_id).order_by(AcceptedSchedule.order.desc()).all()
+    
+    # 全候補地を取得
+    enabled_list = []
+    disabled_list = []
+    accepted_list = []
+    if enabled_site:
+        for site in enabled_site:
+            enabled_list.append({
+                'site_id': site.id,
+                'place_name': site.place_name,
+                'description': site.description,
+                'like': site.like,
+                # 'comments': [c.conmment for c in site.comments]
+            })
+    
+    if disabled_site:
+        for site in disabled_site:
+            disabled_list.append({
+                'site_id': site.id,
+                'place_name': site.place_name,
+                'description': site.description,
+                'like': site.like,
+                # 'comments': [c.conmment for c in site.comments]
+            })
+    
+    if accepted_site:
+        for site in accepted_site:
+            accepted_list.append({
+                'site_id': site.id,
+                'place_name': site.place_name,
+                'description': site.description,
+                'like': site.like,
+                # 'comments': [c.conmment for c in site.comments]
+            })
+                
+    
+    return render_template('chat.html', user=user_info, history=history, room=room, 
+                           enabled_list=enabled_list, disabled_list=disabled_list, accepted_list=accepted_list)
 
 @socketio.on('join')
 def handle_join(data):
@@ -66,8 +107,9 @@ def handle_send_message(data):
             conversation += f"{m.username}: {m.message}\n"
             
         # Cloud Function へPOSTリクエスト送信
+        # 提案bot
         response = requests.post(
-            "https://us-central1-goukan2house.cloudfunctions.net/travel_helper",
+            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
             headers={"Content-Type": "application/json"},
             json={"conversation": conversation}
         )
@@ -85,14 +127,15 @@ def handle_send_message(data):
             # DBに最終的なチャットメッセージとして保存
             ai_msg = ChatMessage(username="travel AI", message=reply_text, room_id=room)
             db.session.add(ai_msg)
-            if "旅行プラン" in reply_text:
-                travel_plan = TravelPlan(room_id=room, markdown=reply_text)
-                db.session.add(travel_plan)
             db.session.commit()
-            emit('receive_message', ai_data, room=str(room))
         else:
             # エラーハンドリング（必要に応じて）
             pass
+        
+@chat_bp.route('/route_define/int:<room_id>', methods=['POST'])
+def route_define(room_id):
+    
+
 
 @chat_bp.route('/invite/<int:room_id>', methods=['POST'])
 def chat_invite(room_id):

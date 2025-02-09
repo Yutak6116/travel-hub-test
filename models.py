@@ -52,14 +52,14 @@ class ChatMessage(db.Model):
 # ユーザーが候補地を追加するときに作られる．
 class CandidateSite(db.Model):
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    place_id: str = db.Column(db.String(255), nullable=False)
+    # user_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    place_id: str = db.Column(db.String(255), nullable=True)
     place_name: str = db.Column(db.String(100), nullable=False)
     description: Optional[str] = db.Column(db.Text, nullable=True)
     like: int = db.Column(db.Integer, nullable=False, default=0)
-    comments: List["Comment"] = db.relationship(
-        "Comment", backref="candidate_site", lazy=True
-    )
+    # comments: List["Comment"] = db.relationship(
+    #     "Comment", backref="candidate_site", lazy=True
+    # )
     room_id: int = db.Column(
         db.Integer, db.ForeignKey("travel_group.id"), nullable=False
     )  # which group this site belongs to
@@ -78,7 +78,7 @@ class CandidateSite(db.Model):
             "place_name": self.place_name,
             "description": self.description,
             "like": self.like,
-            "comments": [c.to_dict() for c in self.comments],
+            # "comments": [c.to_dict() for c in self.comments],
             "group_id": self.group_id,
             "enable": self.enable,
         }
@@ -90,18 +90,18 @@ class CandidateSite(db.Model):
             "place_name",
             "description",
             "like",
-            "comments",
+            # "comments",
             "group_id",
             "enable",
         ]:
             if field in data:
                 setattr(self, field, data[field])
 
-    def add_comment(self, comment: "Comment"):
-        self.comments.append(comment)
+    # def add_comment(self, comment: "Comment"):
+    #     self.comments.append(comment)
 
-    def delete_comment(self, comment: "Comment"):
-        self.comments.remove(comment)
+    # def delete_comment(self, comment: "Comment"):
+    #     self.comments.remove(comment)
 
     def add_like(self):
         self.like += 1
@@ -117,35 +117,35 @@ class CandidateSite(db.Model):
 
 
 # 候補地に対するコメント
-class Comment(db.Model):
-    id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    user_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    site_id: int = db.Column(
-        db.Integer, db.ForeignKey("candidate_site.id"), nullable=False
-    )
-    comment: str = db.Column(db.Text, nullable=False)
-    like: int = db.Column(db.Integer, nullable=False, default=0)
-    created_at: datetime.datetime = db.Column(
-        db.DateTime, nullable=False, default=datetime.datetime.now
-    )
+# class Comment(db.Model):
+#     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     user_id: int = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+#     site_id: int = db.Column(
+#         db.Integer, db.ForeignKey("candidate_site.id"), nullable=False
+#     )
+#     comment: str = db.Column(db.Text, nullable=False)
+#     like: int = db.Column(db.Integer, nullable=False, default=0)
+#     created_at: datetime.datetime = db.Column(
+#         db.DateTime, nullable=False, default=datetime.datetime.now
+#     )
 
-    def __repr__(self):
-        return f"<Comment {self.comment}>"
+#     def __repr__(self):
+#         return f"<Comment {self.comment}>"
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "user_id": self.user_id,
-            "site_id": self.site_id,
-            "comment": self.comment,
-            "like": self.like,
-            "created_at": self.created_at,
-        }
+#     def to_dict(self):
+#         return {
+#             "id": self.id,
+#             "user_id": self.user_id,
+#             "site_id": self.site_id,
+#             "comment": self.comment,
+#             "like": self.like,
+#             "created_at": self.created_at,
+#         }
 
-    def from_dict(self, data: dict):
-        for field in ["user_id", "site_id", "comment", "like", "created_at"]:
-            if field in data:
-                setattr(self, field, data[field])
+#     def from_dict(self, data: dict):
+#         for field in ["user_id", "site_id", "comment", "like", "created_at"]:
+#             if field in data:
+#                 setattr(self, field, data[field])
 
 
 # AIによって生成された旅行プラン
