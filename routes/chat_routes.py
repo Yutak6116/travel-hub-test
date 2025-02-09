@@ -24,23 +24,39 @@ def chat(room_id):
     room = TravelGroup.query.get_or_404(room_id)
     current_user_id = session.get("user_id")
     current_email = session.get("email")
-    # 作成者ならアクセス可能
+    # 作成者ならアクセス可能、または招待されている場合
     has_access = room.creator_user_id == current_user_id
-    # または招待されている場合
     invited = GroupInvitation.query.filter_by(
         group_id=room_id, invited_email=current_email
     ).first()
     if not (has_access or invited):
         flash("このルームへの参加権がありません。")
         return redirect(url_for("group.travels"))
-    user_info = {"name": session.get("name"), "email": current_email}
+    user_info = {
+        "name": session.get("name"),
+        "email": current_email,
+        "id": current_user_id,
+    }
     history_objs = ChatMessage.query.filter_by(room_id=room_id).all()
-    # Markdown を HTML に変換
     history = []
     for msg in history_objs:
         msg_html = markdown.markdown(msg.message)
         history.append({"username": msg.username, "message": msg_html})
-    return render_template("chat.html", user=user_info, history=history, room=room)
+    # 追加：候補地一覧（enable=True のもの）を取得する
+    from models import CandidateSite  # インポートを必要に応じて
+
+    candidate_sites = (
+        CandidateSite.query.filter_by(room_id=room_id, enable=True)
+        .order_by(CandidateSite.id.desc())
+        .all()
+    )
+    return render_template(
+        "chat.html",
+        user=user_info,
+        history=history,
+        room=room,
+        candidate_sites=candidate_sites,
+    )
 
 
 @socketio.on("join")

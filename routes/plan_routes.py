@@ -81,6 +81,7 @@ def add_plan_manually(room_id):
     new_description = request.form.get("description")
     new_place_id = get_place_coordinates(new_place_name)
     new_plan_item = CandidateSite(
+        user_id=request.args.get("user_id"),
         room_id=room_id,
         place_name=new_place_name,
         description=new_description,
