@@ -49,12 +49,17 @@ class GroupInvitation(db.Model):
     )  # pending, accepted, rejected
 
 
-# チャットメッセージのモデル（変更なし）
+# チャットメッセージのモデル
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    username = db.Column(db.String(100), nullable=False, default="")
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey("travel_group.id"), nullable=False)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.username = User.query.get(self.user_id).name
 
 
 # 旅行プランの候補地.

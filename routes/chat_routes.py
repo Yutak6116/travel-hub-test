@@ -52,7 +52,9 @@ def handle_join(data):
 @socketio.on("send_message")
 def handle_send_message(data):
     room = data.get("room")
-    msg = ChatMessage(username=data["user"], message=data["message"], room_id=room)
+    message = data.get("message")
+    user_id = session.get("user_id")
+    msg = ChatMessage(user_id=user_id, message=message, room_id=room)
     db.session.add(msg)
     db.session.commit()
     emit("receive_message", data, room=str(room))
