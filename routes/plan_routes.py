@@ -8,54 +8,25 @@ plan_bp = Blueprint('plan', __name__)
 import re
 
 def extract_destinations_and_purposes(travel_plan_text):
-    # 行ごとに分割
-    lines = travel_plan_text.split('\n')
+    destination_list = []
+    purpose_list = []
     
-    n = 0
-    # 目的地と目的を格納するリスト
-    destinations = []
-    purposes = []
+    # 行き先リストを抽出する正規表現パターン
+    destination_pattern = re.compile(r'行き先リスト:\*\*\[(.*?)\]')
+    purpose_pattern = re.compile(r'概要リスト:\*\*\[(.*?)\]')
     
-    # 行き先を抽出する正規表現パターン
-    start_pattern = re.compile(r'\*{0,2}\d+日目\*{0,2}')
-    end_pattern = re.compile(r'\*{0,2}費用概算\*{0,2}')
+    destination_match = destination_pattern.search(travel_plan_text)
+    purpose_match = purpose_pattern.search(travel_plan_text)
     
-    # フラグを初期化
-    recording = False
+    if destination_match:
+        destination_list = [item.strip() for item in destination_match.group(1).split(',')]
     
-    for line in lines:
-        # 「1日目」から「費用概算」までの行を記録
-        if start_pattern.match(line):
-            n += 1
-            recording = True
-            # 何日目かを抽出
-            destinations.append(n)
-            purposes.append(n)
-            continue
-        if end_pattern.match(line):
-            break
-
-        # コロンが半角、全角のいずれかをAIが出力するので、それらに対応する正規表現を用意
-        if recording:
-            # 行き先と目的を抽出
-            match = re.search(r'(.+?)：\s*(.+)', line)
-            if match:
-                destination = re.sub(r'^[\*\-\s]+', '', match.group(1).strip())
-                purpose = re.sub(r'^[\*\s]+', '', match.group(2).strip())
-                destinations.append(destination)
-                purposes.append(purpose)
-            
-            if not match:
-                match = re.search(r'(.+?):\s*(.+)', line)
-                if match:
-                    destination = re.sub(r'^[\*\-\s]+', '', match.group(1).strip())
-                    purpose = re.sub(r'^[\*\s]+', '', match.group(2).strip())
-                    destinations.append(destination)
-                    purposes.append(purpose)
-                    
-    print(travel_plan_text)
-    print(destinations)
-    return destinations, purposes
+    if purpose_match:
+        purpose_list = [item.strip() for item in purpose_match.group(1).split(',')]
+        
+    print(destination_list, purpose_list)
+    
+    return destination_list, purpose_list
 
 # 関数get_all_place_id_in_travelplanitem を作る
 # place_idを格納したあとのTravelPlanItemを返す。(query.all()で取得)
