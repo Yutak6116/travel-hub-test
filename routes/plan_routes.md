@@ -1,6 +1,6 @@
 # Plan Routesのルーティング仕様
 
-この文書は [routes/plan_routes.py](routes/plan_routes.py) に定義されたルーティング仕様をまとめたものです。
+この文書は [routes/plan_routes.py](routes/plan_routes.py) に定義されたルーティング仕様をまとめたものである。
 
 ---
 ## 目次
@@ -12,24 +12,27 @@
   - [2. 候補地を削除する](#2-候補地を削除する)
   - [3. すべての候補地を削除する](#3-すべての候補地を削除する)
   - [4. 削除された候補地を元に戻す](#4-削除された候補地を元に戻す)
-  - [5. 候補地に「いいね」を追加する](#5-候補地にいいねを追加する)
-  - [6. 候補地に対する「いいね」を取り消す](#6-候補地に対するいいねを取り消す)
+  - [5. 候補地の「いいね」切り替え](#5-候補地のいいね切り替え)
+  - [6. 候補地に対する「いいね」数を取得する](#6-候補地に対するいいね数を取得する)
   - [7. 候補地にコメントを追加する](#7-候補地にコメントを追加する)
   - [8. 候補地のコメントを削除する](#8-候補地のコメントを削除する)
+  - [9. 候補地の詳細情報を取得する](#9-候補地の詳細情報を取得する)
 
 ## エンドポイント一覧
 
-| ルート | メソッド | パラメータ | 処理の概要 |
-| --- | --- | --- | --- |
-| `/candidate_site/<int:room_id>` | POST | `room_id` (整数) | [候補地を追加する](#1-候補地を追加する) |
-| `/candidate_site/<int:room_id>/<int:site_id>` | DELETE | `room_id` (整数), `site_id` (整数) | [候補地を削除する](#2-候補地を削除する) |
-| `/candidate_site/<int:room_id>` | DELETE | `room_id` (整数) | [すべての候補地を削除する](#3-すべての候補地を削除する) |
-| `/candidate_site/<int:room_id>/<int:site_id>/restore` | POST | `room_id` (整数), `site_id` (整数) | [削除された候補地を元に戻す](#4-削除された候補地を元に戻す) |
-| `/candidate_site/<int:room_id>/<int:site_id>/like` | POST | `room_id` (整数), `site_id` (整数) | [候補地に「いいね」を追加する](#5-候補地にいいねを追加する) |
-| `/candidate_site/<int:room_id>/<int:site_id>/dislike` | POST | `room_id` (整数), `site_id` (整数) | [候補地に対する「いいね」を取り消す](#6-候補地に対するいいねを取り消す) |
-| `/candidate_site/<int:room_id>/<int:site_id>/comment` | POST | `room_id` (整数), `site_id` (整数) | [候補地にコメントを追加する](#7-候補地にコメントを追加する) |
-| `/candidate_site/<int:room_id>/<int:site_id>/comment/<int:comment_id>` | DELETE | `room_id` (整数), `site_id` (整数), `comment_id` (整数) | [候補地のコメントを削除する](#8-候補地のコメントを削除する) |
+| ルート                                                               | メソッド | パラメータ                                                         | 処理の概要                                                  |
+|----------------------------------------------------------------------|----------|--------------------------------------------------------------------|-------------------------------------------------------------|
+| `/candidate_site/<int:room_id>`                                      | POST     | `room_id` (整数)<br>フォームデータ: `place_name`, `description`     | [候補地を追加する](#1-候補地を追加する)                      |
+| `/candidate_site/<int:room_id>/<int:site_id>`                         | DELETE   | `room_id` (整数), `site_id` (整数)                                   | [候補地を削除する](#2-候補地を削除する)                      |
+| `/candidate_site/<int:room_id>`                                      | DELETE   | `room_id` (整数)                                                   | [すべての候補地を削除する](#3-すべての候補地を削除する)        |
+| `/candidate_site/<int:room_id>/<int:site_id>/restore`                 | POST     | `room_id` (整数), `site_id` (整数)                                   | [削除された候補地を元に戻す](#4-削除された候補地を元に戻す)       |
+| `/candidate_site/<int:room_id>/<int:site_id>/toggle_like`             | POST     | `room_id` (整数), `site_id` (整数)<br>フォームデータ: `user_id`       | [候補地の「いいね」切り替え](#5-候補地のいいね切り替え)         |
+| `/candidate_site/<int:room_id>/<int:site_id>/like_count`              | GET      | `room_id` (整数), `site_id` (整数)                                   | [候補地に対する「いいね」数を取得する](#6-候補地に対するいいね数を取得する) |
+| `/candidate_site/<int:room_id>/<int:site_id>/comment`                 | POST     | `room_id` (整数), `site_id` (整数)<br>フォームデータ: `user_id`, `comment` | [候補地にコメントを追加する](#7-候補地にコメントを追加する)     |
+| `/candidate_site/<int:room_id>/<int:site_id>/comment/<int:comment_id>`  | DELETE   | `room_id` (整数), `site_id` (整数), `comment_id` (整数)               | [候補地のコメントを削除する](#8-候補地のコメントを削除する)      |
+| `/candidate_site/<int:room_id>/<int:site_id>`                         | GET      | `room_id` (整数), `site_id` (整数)                                   | [候補地の詳細情報を取得する](#9-候補地の詳細情報を取得する)      |
 
+---
 
 ## 1. 候補地を追加する
 
@@ -41,12 +44,20 @@
     - `place_name`: 追加する場所の名称
     - `description`: 候補地の説明
 - **処理:**
-  1. リクエストから `place_name` と `description` を取得
-  2. `get_place_coordinates` を呼び出して `place_id` を取得
-  3. 取得した情報をもとに `CandidateSite` の新規インスタンスを作成
-  4. データベースに新しい候補地として追加し、コミット
-  5. `/chat/<room_id>` にリダイレクト
-- **注意事項:** ユーザーが手動で候補地を追加する際に使用されるエンドポイントです。
+  1. リクエストから `place_name` と `description` を取得する。
+  2. `get_place_coordinates` を呼び出し、座標情報（`place_id`）を取得する。
+  3. 取得した情報をもとに `CandidateSite` の新規インスタンスを作成する。
+  4. データベースに新しい候補地として追加し、コミットする。
+  5. `/chat/<room_id>` にリダイレクトする。
+- **Examples:**
+  ```html
+  <!-- HTMLフォームから呼び出す例 -->
+  <form method="POST" action="/candidate_site/42">
+    <input type="text" name="place_name" value="新候補地">
+    <input type="text" name="description" value="説明文">
+    <button type="submit">追加</button>
+  </form>
+  ```
 
 ---
 
@@ -97,35 +108,37 @@
 
 ---
 
-## 5. 候補地に「いいね」を追加する
+## 5. 候補地の「いいね」切り替え
 
-- **ルーティング:** `/candidate_site/<int:room_id>/<int:site_id>/like`
+- **ルーティング:** `/candidate_site/<int:room_id>/<int:site_id>/toggle_like`
 - **メソッド:** POST
 - **パラメータ:**
   - URL パラメータ:
     - `room_id` (整数)
     - `site_id` (整数)
+  - フォームデータ:
+    - `user_id`: ユーザーのID
 - **処理:**
   1. 指定された `site_id` の候補地を取得
-  2. 存在する場合、`add_like()` メソッドを呼び出して「いいね」カウントを増加
+  2. 存在する場合、`toggle_like()` メソッドを呼び出して「いいね」状態を切り替え
   3. 変更をコミットし、 `/chat/<room_id>` にリダイレクト
 - **注意事項:** 候補地が存在しない場合は、リダイレクトのみ実施される。
 
 ---
 
-## 6. 候補地に対する「いいね」を取り消す
+## 6. 候補地に対する「いいね」数を取得する
 
-- **ルーティング:** `/candidate_site/<int:room_id>/<int:site_id>/dislike`
-- **メソッド:** POST
+- **ルーティング:** `/candidate_site/<int:room_id>/<int:site_id>/like_count`
+- **メソッド:** GET
 - **パラメータ:**
   - URL パラメータ:
     - `room_id` (整数)
     - `site_id` (整数)
 - **処理:**
   1. 指定された `site_id` の候補地を取得
-  2. 存在する場合、`delete_like()` メソッドを呼び出して「いいね」カウントを減少
-  3. 変更をコミットし、 `/chat/<room_id>` にリダイレクト
-- **注意事項:** 指定候補地が存在しない場合は、リダイレクトのみ実行される。
+  2. 存在する場合、`get_like_count()` メソッドを呼び出して「いいね」数を取得
+  3. 取得した「いいね」数を返す
+- **注意事項:** 候補地が存在しない場合は、空の結果を返す。
 
 ---
 
@@ -167,6 +180,22 @@
   4. データベースからコメントを削除し、コミット
   5. `/chat/<room_id>` にリダイレクト
 - **注意事項:** 対象の候補地およびコメントが存在する場合のみ削除が実行される。
+
+---
+
+## 9. 候補地の詳細情報を取得する
+
+- **ルーティング:** `/candidate_site/<int:room_id>/<int:site_id>`
+- **メソッド:** GET
+- **パラメータ:**
+  - URL パラメータ:
+    - `room_id` (整数)
+    - `site_id` (整数)
+- **処理:**
+  1. 指定された `site_id` の候補地を取得
+  2. 存在する場合、候補地の詳細情報を取得
+  3. 取得した詳細情報を返す
+- **注意事項:** 候補地が存在しない場合は、空の結果を返す。
 
 ---
 
