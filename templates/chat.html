@@ -149,12 +149,7 @@
         >
           旅行一覧へ
         </a>
-        <a
-          href="{{ url_for('map.show_map', room_id=room.id) }}"
-          class="btn btn-primary"
-        >
-          地図を表示
-        </a>
+        <button id="toggle-map-btn" class="btn btn-info mt-3">地図の表示/非表示</button>
 
         <!-- グループ招待フォーム -->
         <div class="invite-section mt-3">
@@ -252,6 +247,22 @@
       </div>
     </div>
 
+        <!-- 右下に地図を表示するiframe -->
+    <div class="map-container" id="map-container">
+        <iframe src="{{ url_for('map.show_map', room_id=room.id) }}" width="100%" height="100%" frameborder="0"></iframe>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        const socket = io();
+        const chatForm = document.getElementById("chat-form");
+        const messageInput = document.getElementById("message-input");
+        const chatBox = document.getElementById("chat-box");
+        const userName = "{{ user.name }}";
+        const room = "{{ room.id }}";
+
     <!-- スクリプト類 -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
@@ -296,6 +307,8 @@
         chatBox.scrollTop = chatBox.scrollHeight;
       });
     </script>
+
+    
 
     <script>
       // 詳細パネルの要素
@@ -436,6 +449,10 @@
         });
       }
 
+      // 地図の表示/非表示を切り替えるボタンのクリックイベントを設定
+      $("#toggle-map-btn").click(function () {
+      $("#map-container").toggle();
+      });
       // いいねトグル
       document.querySelectorAll(".like-btn").forEach(btn => {
         rebindLikeButton(btn);
