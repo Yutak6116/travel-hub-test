@@ -348,6 +348,35 @@
         messageInput.focus();
       });
 
+      // AI呼び出し送信用処理の追加
+      $(function() {
+          $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
+          $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
+      });
+      document.getElementById("aiCallBtn").addEventListener("click", function(e) {
+          e.preventDefault();
+          const start = document.getElementById("aiStartDate").value;
+          const end = document.getElementById("aiEndDate").value;
+          const departure = document.getElementById("aiDeparture").value;
+          const destination = document.getElementById("aiDestination").value;
+          const cost = document.getElementById("aiCost").value;
+          const note = document.getElementById("aiNote").value;
+          const aiMessage = "@AI_plan 開始日: " + start +
+                            " 終了日: " + end +
+                            " 出発場所: " + departure +
+                            " 目標場所: " + destination +
+                            " 金額: " + cost +
+                            " 備考: " + note;
+          socket.emit("send_message", { user: userName, message: aiMessage, room: room });
+          // 必要に応じて各入力欄をクリア
+          document.getElementById("aiStartDate").value = "";
+          document.getElementById("aiEndDate").value = "";
+          document.getElementById("aiDeparture").value = "";
+          document.getElementById("aiDestination").value = "";
+          document.getElementById("aiCost").value = "";
+          document.getElementById("aiNote").value = "";
+      });
+
     </script>
 
     <script>
