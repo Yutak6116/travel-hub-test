@@ -150,9 +150,6 @@ def handle_send_message(data):
                         db.session.commit()
                         candidate_site_dict = candidate.to_dict()
                         emit("add_candidate_site", candidate_site_dict, room=str(room))
-                # 念のため最新候補地を再度送信
-                candidate_site_dict = candidate.to_dict()
-                emit("add_candidate_site", candidate_site_dict, room=str(room))
         else:
             # エラーハンドリング（必要に応じて）
             pass
