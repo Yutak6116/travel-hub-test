@@ -7,10 +7,10 @@ from extensions import db
 
 
 class User(db.Model):
-    id: Mapped[int] = mapped_column(db.Integer, primary_key=True)
-    google_id: Mapped[str] = mapped_column(db.String(100), nullable=False)
+    id: Mapped[int] = mapped_column(db.Integer, primary_key=True, autoincrement=True)
+    google_id: Mapped[str] = mapped_column(db.String(100), nullable=True)
     name: Mapped[str] = mapped_column(db.String(100), nullable=False)
-    email: Mapped[str] = mapped_column(db.String(100), nullable=False)
+    email: Mapped[str] = mapped_column(db.String(100), nullable=True)
     picture: Mapped[str] = mapped_column(db.String(200), nullable=True)
     friends: Mapped[List["Friend"]] = relationship(
         "Friend", backref="user", lazy=True, foreign_keys="Friend.user_id"
@@ -22,7 +22,7 @@ class User(db.Model):
 
 # フレンドテーブルのモデル
 class Friend(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     friend_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     display_name = db.Column(db.String(100), nullable=True)
@@ -30,7 +30,7 @@ class Friend(db.Model):
 
 # グループ作成用のモデル
 class TravelGroup(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(100), nullable=False)
     icon_path = db.Column(db.String(200), nullable=True)
     start_date = db.Column(db.Date, nullable=False)
@@ -40,7 +40,7 @@ class TravelGroup(db.Model):
 
 # グループ招待用モデル
 class GroupInvitation(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey("travel_group.id"), nullable=False)
     inviting_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     invited_email = db.Column(db.String(100), nullable=False)
@@ -57,9 +57,16 @@ class ChatMessage(db.Model):
     message = db.Column(db.Text, nullable=False)
     room_id = db.Column(db.Integer, db.ForeignKey("travel_group.id"), nullable=False)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.username = User.query.get(self.user_id).name
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+    #     self.username = User.query.filter_by(user_id=self.user_id).first().name
+
+class AISuggest(db.Model):
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    room_id: Mapped[int] = mapped_column(
+        db.Integer, db.ForeignKey("travel_group.id"), nullable=False
+    )
+    markdown: Mapped[str] = mapped_column(db.Text, nullable=False)
 
 
 # 旅行プランの候補地.

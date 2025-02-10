@@ -10,9 +10,11 @@ from flask import (
     url_for,
 )
 from flask_socketio import emit, join_room
-
+from .plan_routes import extract_des_expl
+from services.place_service import get_place_coordinates
 from extensions import db, socketio
-from models import ChatMessage, GroupInvitation, TravelGroup
+from models import ChatMessage, GroupInvitation, TravelGroup, AISuggest, User, CandidateSite
+import requests
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -76,46 +78,78 @@ def handle_send_message(data):
     emit("receive_message", data, room=str(room))
 
     # todo: AIの返信を追加
-    # if "@AI" in data.get("message", ""):
-    #     # まず「Loading」と表示
-    #     loading_msg = {"room": room, "user": "travel AI", "message": "Loading"}
-    #     emit("receive_message", loading_msg, room=str(room))
-    #     ai_loading = ChatMessage(username="travel AI", message="Loading", room_id=room)
-    #     db.session.add(ai_loading)
-    #     db.session.commit()
+    if "@AI" in data.get("message", ""):
+        # まず「Loading」と表示
+        if User.query.filter_by(name="travel AI").first() is None:
+            ai = User(name="travel AI")
+            db.session.add(ai)
+            db.session.commit()
+        
+        loading_msg = {"room": room, "user": "travel AI", "message": "Loading"}
+        emit("receive_message", loading_msg, room=str(room))
+        ai = User.query.filter_by(name="travel AI").first()
+        ai_loading = ChatMessage(user_id=ai.id, username=ai.name, message="Loading", room_id=room)
+        db.session.add(ai_loading)
+        db.session.commit()
 
-    #     # ルームのチャット履歴を取得（昇順）
-    #     conversation_objs = (
-    #         ChatMessage.query.filter_by(room_id=room).order_by(ChatMessage.id).all()
-    #     )
-    #     conversation = ""
-    #     for m in conversation_objs:
-    #         conversation += f"{m.username}: {m.message}\n"
+        # ルームのチャット履歴を取得（昇順）
+        conversation_objs = (
+            ChatMessage.query.filter_by(room_id=room).order_by(ChatMessage.id).all()
+        )
+        conversation = ""
+        for m in conversation_objs:
+            conversation += f"{m.username}: {m.message}\n"
 
-    #     # Cloud Function へPOSTリクエスト送信
-    #     response = requests.post(
-    #         "https://us-central1-goukan2house.cloudfunctions.net/travel_helper",
-    #         headers={"Content-Type": "application/json"},
-    #         json={"conversation": conversation},
-    #     )
-    #     if response.ok:
-    #         # JSONから候補の返信部分のみ抽出
-    #         data_json = response.json()
-    #         candidate_text = data_json["candidates"][0]["content"]["parts"][0]["text"]
+        # Cloud Function へPOSTリクエスト送信
+        response = requests.post(
+            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
+            headers={"Content-Type": "application/json"},
+            json={"conversation": conversation},
+        )
+        if response.ok:
+            # JSONから候補の返信部分のみ抽出
+            data_json = response.json()
+            candidate_text = data_json["candidates"][0]["content"]["parts"][0]["text"]
 
-    #         reply_text = candidate_text.strip()
-    #         ai_data = {"room": room, "user": "travel AI", "message": reply_text}
-    #         # DBに最終的なチャットメッセージとして保存
-    #         ai_msg = ChatMessage(username="travel AI", message=reply_text, room_id=room)
-    #         db.session.add(ai_msg)
-    #         if "旅行プラン" in reply_text:
-    #             travel_plan = TravelPlan(room_id=room, markdown=reply_text)
-    #             db.session.add(travel_plan)
-    #         db.session.commit()
-    #         emit("receive_message", ai_data, room=str(room))
-    #     else:
-    #         # エラーハンドリング（必要に応じて）
-    #         pass
+            reply_text = candidate_text.strip()
+            
+            print(reply_text)
+            
+            ai_data = {"room": room, "user": "travel AI", "message": reply_text}
+            # DBに最終的なチャットメッセージとして保存
+            ai_msg = ChatMessage(user_id=ai.id, username=ai.name, message=reply_text, room_id=room)
+            db.session.add(ai_msg)
+            if "旅行プラン" in reply_text:
+                travel_plan = AISuggest(room_id=room, markdown=reply_text)
+                db.session.add(travel_plan)
+            db.session.commit()
+            emit("receive_message", ai_data, room=str(room))
+            
+            destination, explanation = extract_des_expl(reply_text)
+            if destination:
+                # 候補地を追加
+                for dest in destination:
+                    if not CandidateSite.query.filter_by(
+                        room_id=room, place_name=dest
+                    ).first():
+                        place_id = get_place_coordinates(dest)
+                        candidate = CandidateSite(
+                            user_id=ai.id,
+                            place_name=dest,
+                            description=explanation,
+                            room_id=room,
+                            enable=True,
+                            place_id=place_id,
+                        )
+                        db.session.add(candidate)
+                        db.session.commit()
+                        candidate_site_dict = candidate.to_dict()
+                        emit("add_candidate_site", candidate_site_dict, room=str(room))
+                candidate_site_dict = candidate.to_dict()
+                emit("add_candidate_site", candidate_site_dict, room=str(room))
+        else:
+            # エラーハンドリング（必要に応じて）
+            pass
 
 
 @chat_bp.route("/invite/<int:room_id>", methods=["POST"])
@@ -140,3 +174,5 @@ def chat_invite(room_id):
     db.session.add(invitation)
     db.session.commit()
     return jsonify({"success": True}), 200
+
+

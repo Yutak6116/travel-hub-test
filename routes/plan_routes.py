@@ -5,6 +5,7 @@ from flask import Blueprint, jsonify, redirect, request
 from extensions import db
 from models import CandidateSite, CandidateSiteLike, Comment, User
 from services.place_service import get_place_coordinates
+import requests
 
 plan_bp = Blueprint("plan", __name__)
 
@@ -56,48 +57,18 @@ def extract_destinations_and_purposes(travel_plan_text):
 
     return destination_list, purpose_list
 
+import re
+def extract_des_expl(text):
 
-# 関数get_all_place_id_in_travelplanitem を作る
-# place_idを格納したあとのTravelPlanItemを返す。(query.all()で取得)
-
-# 同様に、関数get_all_place_id_in_alltravelplanitem を作
-
-
-# NEED
-# @plan_bp.route('/add_plan/<int:room_id>', methods=['POST'])
-# def add_plan(room_id):
-#     travel_plan_text = TravelPlan.query.filter_by(room_id=room_id).order_by(TravelPlan.id.desc()).first().markdown
-#     destinations, purposes = extract_destinations_and_purposes(travel_plan_text)
-#     # TravelPlanItemのroom_id=room_idのデータを削除
-#     TravelPlanItem.query.filter_by(room_id=room_id).delete()
-#     n = 0
-#     t = 0   #何番目に行くか
-#     for i in range(len(destinations)):
-#         if str(destinations[i]).isdecimal():
-#             n = int(destinations[i])
-#             continue
-#         new_place_id = get_place_coordinates(destinations[i])
-#         new_plan_item = TravelPlanItem(
-#             room_id=room_id,
-#             place_name=destinations[i],
-#             description=purposes[i],
-#             date = n, place_id =
-#             new_place_id,
-#             order=t
-#             )
-#         # すでにリストに追加されている候補地は入れない
-#         if AllTravelPlanItem.query.filter_by(room_id=room_id, place_name=destinations[i]).first():
-#             continue
-#         new_all_plan_item = AllTravelPlanItem(
-#             room_id=room_id,
-#             place_name=destinations[i],
-#             description=purposes[i],
-#             place_id = new_place_id)
-#         db.session.add(new_plan_item)
-#         db.session.add(new_all_plan_item)
-#         t += 1
-
-#     db.session.commit()
+    # 最初の角括弧に一致する部分を非貪欲マッチで抽出
+    matches = re.findall(r"\[(.*?)\]", text, re.DOTALL)
+    if matches and len(matches) >= 2:
+        # 1つ目の角括弧の中身をカンマで分割してリスト化
+        destinations = [d.strip() for d in matches[0].split(",")]
+        explanations = matches[1]
+        return destinations, explanations
+    else:
+        return [], ""
 
 
 # 手動で暫定候補地を追加
@@ -140,7 +111,7 @@ def add_plan_manually(room_id):
 
 
 # 暫定的なプランから候補地を削除
-@plan_bp.route("/delete_plan_item/<int:room_id>/<int:site_id>", methods=["DELETE"])
+@plan_bp.route("/delete_plan_item/<int:room_id>/<int:site_id>", methods=["POST"])
 def delete_plan_item(room_id, site_id):
     """
     単一の候補地を削除する関数である。
@@ -420,7 +391,7 @@ def delete_comment_plan_item(room_id, site_id, comment_id):
 
 
 # 候補地の詳細情報を取得
-@plan_bp.route("/candidate_site/<int:room_id>/<int:site_id>", methods=["GET"])
+@plan_bp.route("/get_site_detail/<int:room_id>/<int:site_id>", methods=["GET"])
 def get_site_detail(room_id, site_id):
     """
     候補地の詳細情報を取得する関数である。
@@ -463,3 +434,106 @@ def get_site_detail(room_id, site_id):
         enriched_comments.append(comment_data)
     site_dict["comments"] = enriched_comments
     return jsonify(site_dict)
+
+# 旅行プランの確定
+@plan_bp.route("/confirm_plan/<int:room_id>", methods=["POST"])
+def confirm_plan(room_id):
+    """
+    旅行プランを確定する関数である。
+
+    ユーザーが最終的に確定した旅行プランをデータベースに保存し、
+    チャット画面へリダイレクトする。
+
+    Args:
+        room_id (int): 対象のルームID
+        start_date (str): 旅行開始日
+        end_date (str): 旅行終了日
+        budget (int): 予算
+        remarks (str): 備考
+        候補地のリスト(dict): place_name, likes, comments
+
+    Returns:
+        Response: 処理完了後のリダイレクトレスポンス
+
+    Examples:
+        <!-- HTMLフォームから呼び出す例 -->
+        <form method="POST" action="/confirm_plan/42">
+          <button type="submit">確定</button>
+        </form>
+    """
+    
+    start_date = request.form.get("start_date")
+    end_date = request.form.get("end_date")
+    start_location = request.form.get("start_location")
+    budget = request.form.get("budget")
+    remarks = request.form.get("remarks")
+    # 候補地のリストを取得
+    candidate_list = []
+    candidate_sites = CandidateSite.query.filter_by(room_id=room_id, enable=True).all()
+    for site in candidate_sites:
+        place_name = site.place_name
+        likes = site.like
+        comments = [c.to_dict() for c in site.comments]
+        site_dict = {
+            "place_name": place_name,
+            "likes": likes,
+            "comments": comments,
+        }
+        candidate_list.append(site_dict)
+    
+    # 削除された候補地のリストを取得
+    deleted_list = []
+    deleted_sites = CandidateSite.query.filter_by(room_id=room_id, enable=False).all()
+    for site in deleted_sites:
+        place_name = site.place_name
+        likes = site.like
+        comments = [c.to_dict() for c in site.comments]
+        site_dict = {
+            "place_name": place_name,
+            "likes": likes,
+            "comments": comments,
+        }
+        deleted_list.append(site_dict)
+    
+    
+    response = requests.post(
+        "https://us-central1-goukan2house.cloudfunctions.net/root_help2",
+        headers={"Content-Type": "application/json"},
+        json={
+            "start_date": start_date,
+            "end_date": end_date,
+            "start_location": start_location,
+            "budget": budget,
+            "remarks": remarks,
+            "candidate_list": candidate_list,
+            "deleted_list": deleted_list
+        },
+    )
+    json={
+            "start_date": start_date,
+            "end_date": end_date,
+            "start_location": start_location,
+            "budget": budget,
+            "remarks": remarks,
+            "candidate_list": candidate_list,
+            "deleted_list": deleted_list
+        }
+    print(json)
+    if response.ok:
+        data_json = response.json()
+    else:
+        print("Error", response.status_code, response.text)
+    # 旅行プランの確定処理
+    candidate_text = data_json["candidates"][0]["content"]["parts"][0]["text"]
+
+    reply_text = candidate_text.strip()
+            
+    print(reply_text)
+    
+    destinations, purposes = extract_destinations_and_purposes(reply_text)
+    
+    print(destinations)
+    print(purposes)
+    
+    return destinations, purposes
+    

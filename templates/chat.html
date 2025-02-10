@@ -112,35 +112,38 @@
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
 
-      <div class="mt-3">
-        <!-- 簡単AI呼び出しセクション -->
-        <div class="input-group mt-4">
-          <input
-            placeholder="開始日（例: 2023-10-31）"
-            class="form-control"
-          />
-          <input
-            placeholder="終了日（例: 2023-11-05）"
-            class="form-control"
-          />
-          <input
-            placeholder="出発場所"
-            class="form-control"
-          />
-          <input
-            placeholder="目標場所"
-            class="form-control"
-          />
-          <input
-            placeholder="金額"
-            class="form-control"
-          />
-          <input
-            placeholder="備考"
-            class="form-control"
-          />
-          <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
-        </div>
+      <form
+      action="{{ url_for('plan.confirm_plan', room_id=room.id) }}"
+      method="POST"
+      class="input-group mt-4"
+    >
+      <input
+        name="start_date"
+        placeholder="開始日（例: 2023-10-31）"
+        class="form-control"
+      />
+      <input
+        name="end_date"
+        placeholder="終了日（例: 2023-11-05）"
+        class="form-control"
+      />
+      <input
+        name="start_location"
+        placeholder="出発場所"
+        class="form-control"
+      />
+      <input
+        name="budget"
+        placeholder="金額"
+        class="form-control"
+      />
+      <input
+        name="remarks"
+        placeholder="備考"
+        class="form-control"
+      />
+      <button type="submit" class="btn btn-info">AI呼び出し送信</button>
+    </form>
 
         <!-- リンクボタン -->
         <a
@@ -195,6 +198,13 @@
               >
                 ♥
               </button>
+              <!--<form
+                action="{{ url_for('plan.delete_plan_item', room_id=room.id, site_id=site.id) }}"
+                method="POST"
+                style="display:inline;"
+              >
+                <button type="submit" class="btn btn-sm btn-danger float-end">✖</button>-->
+              </form>
             </li>
             {% endfor %}
           </ul>
@@ -329,27 +339,25 @@
       const detailCommentList = document.getElementById("detailCommentList");
       let currentOpenSite = null;
 
-      // 候補地クリック→サイト情報をGETして反映
       document.querySelectorAll(".site-item").forEach(item => {
-        item.addEventListener("click", () => {
+        item.addEventListener("click", event => {
+          // もしクリックイベントのターゲットがいいねボタンやフォーム内の要素なら処理を中断
+          if (event.target.closest(".like-btn") || event.target.closest("form")) {
+            return;
+          }
           const siteId = item.dataset.siteid;
-          // 同じサイトを再クリックなら閉じる
+          // 同じサイトを再クリックなら詳細パネルを閉じる
           if (currentOpenSite === siteId) {
-            siteDetail.style.display = "none";
             currentOpenSite = null;
+            siteDetail.style.display = "none";
             return;
           }
           currentOpenSite = siteId;
-          // DBから最新情報を取得
           fetch(`/candidate_site/${room}/${siteId}`, {
             method: "GET",
           })
             .then(res => res.json())
             .then(data => {
-              if (data.error) {
-                alert("対象の候補地が見つかりません。");
-                return;
-              }
               detailTitle.textContent = data.place_name;
               detailDescription.textContent = data.description || "";
               detailLikeCount.textContent = data.like;
