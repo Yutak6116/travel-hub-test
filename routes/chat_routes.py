@@ -82,9 +82,58 @@ def handle_send_message(data):
     # AIの返信処理
     # ユーザーが送信したメッセージの先頭に "@AI" がある場合のみAIへの依頼とする
     user_message = message.strip()
-    if user_message.startswith("@AI"):
+    if user_message.startswith("@AI_plan"):
         # コマンド部分を取り除く
-        ai_prompt = user_message[len("@AI"):].strip()
+        ai_prompt = user_message[len("@AI_plan"):].strip()
+        # プロンプトが空の場合はデフォルトの指示を設定する (必要に応じて変更)
+        if not ai_prompt:
+            ai_prompt = "以下の会話をもとに旅行プランを提案してください。"
+        
+        # travel AIユーザーの存在確認と作成
+        if User.query.filter_by(name="travel AI").first() is None:
+            ai = User(name="travel AI")
+            db.session.add(ai)
+            db.session.commit()
+        else:
+            ai = User.query.filter_by(name="travel AI").first()
+
+        # Loadingメッセージを表示
+        loading_msg = {"room": room, "user": "travel AI", "message": "Loading"}
+        emit("receive_message", loading_msg, room=str(room))
+        ai_loading = ChatMessage(user_id=ai.id, username=ai.name, message="Loading", room_id=room)
+        db.session.add(ai_loading)
+        db.session.commit()
+
+        # ルームのチャット履歴を取得（昇順）
+        conversation_objs = ChatMessage.query.filter_by(room_id=room).order_by(ChatMessage.id).all()
+        conversation = ""
+        for m in conversation_objs:
+            conversation += f"{m.username}: {m.message}\n"
+
+        # Cloud Function へPOSTリクエスト送信（プロンプトを利用する場合は適宜 conversation とマージする）
+        response = requests.post(
+            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
+            headers={"Content-Type": "application/json"},
+            json={"conversation": conversation, "ai_prompt": ai_prompt},
+        )
+        if response.ok:
+            data_json = response.json()
+            candidate_text = data_json["candidates"][0]["content"]["parts"][0]["text"]
+            reply_text = candidate_text.strip()
+            
+            print(reply_text)
+            
+            ai_data = {"room": room, "user": "travel AI", "message": reply_text}
+            # DBに最終的なチャットメッセージとして保存
+            ai_msg = ChatMessage(user_id=ai.id, username=ai.name, message=reply_text, room_id=room)
+            db.session.add(ai_msg)
+            db.session.commit()
+            emit("receive_message", ai_data, room=str(room))
+
+
+    if user_message.startswith("@AI_teian"):
+        # コマンド部分を取り除く
+        ai_prompt = user_message[len("@AI_teian"):].strip()
         # プロンプトが空の場合はデフォルトの指示を設定する (必要に応じて変更)
         if not ai_prompt:
             ai_prompt = "以下の会話をもとに旅行プランを提案してください。"
@@ -169,7 +218,6 @@ def chat_message_to_dict(text):
         parts = group.split(",", 1)
         result.append(parts)
     return result
-
 
 @chat_bp.route("/invite/<int:room_id>", methods=["POST"])
 def chat_invite(room_id):

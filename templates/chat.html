@@ -118,6 +118,11 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
+      <!-- AI入力用ボタンの追加 -->
+      <div id="ai-button-panel" class="mt-2">
+        <button type="button" id="ai-plan-btn" class="btn btn-secondary">@AI_plan</button>
+        <button type="button" id="ai-teian-btn" class="btn btn-secondary">@AI_teian</button>
+      </div>
 
       <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
       <div class="input-group mt-4">
@@ -160,6 +165,7 @@
         />
         <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
       </div>
+
 
         <!-- リンクボタン -->
   <!-- 左上に表示するボタン -->
@@ -332,63 +338,15 @@
         chatBox.scrollTop = chatBox.scrollHeight;
       });
 
- // 簡単AI呼び出し用のイベントリスナー（送信者は現在のユーザーとし、メッセージ先頭に"@AI"を付与）
- document
- .getElementById("aiCallBtn")
- .addEventListener("click", function () {
-   const startDate = document.getElementById("aiStartDate").value.trim();
-   const endDate = document.getElementById("aiEndDate").value.trim();
-   const departure = document.getElementById("aiDeparture").value.trim();
-   const destination = document
-     .getElementById("aiDestination")
-     .value.trim();
-   const cost = document.getElementById("aiCost").value.trim();
-   const note = document.getElementById("aiNote").value.trim();
-   if (
-     !startDate &&
-     !endDate &&
-     !departure &&
-     !destination &&
-     !cost &&
-     !note
-   )
-     return;
-
-   const dateText =
-     startDate && endDate
-       ? startDate + " ～ " + endDate
-       : startDate || endDate;
-   const aiMessage =
-     "@AI AI呼び出し要求:\n日程: " +
-     dateText +
-     "\n出発場所: " +
-     departure +
-     "\n目標場所: " +
-     destination +
-     "\n金額: " +
-     cost +
-     "\n備考: " +
-     note;
-   socket.emit("send_message", {
-     user: userName,
-     message: aiMessage,
-     room: room,
-   });
-
-   // 入力欄をクリア
-   document.getElementById("aiStartDate").value = "";
-   document.getElementById("aiEndDate").value = "";
-   document.getElementById("aiDeparture").value = "";
-   document.getElementById("aiDestination").value = "";
-   document.getElementById("aiCost").value = "";
-   document.getElementById("aiNote").value = "";
- });
-
-// jQuery UI datepicker の有効化
-$(function () {
- $("#aiStartDate").datepicker({ dateFormat: "yy-mm-dd" });
- $("#aiEndDate").datepicker({ dateFormat: "yy-mm-dd" });
-});
+      // AI用ボタンのイベントを設定
+      document.getElementById("ai-plan-btn").addEventListener("click", function() {
+        messageInput.value += (messageInput.value ? " " : "") + "@AI_plan";
+        messageInput.focus();
+      });
+      document.getElementById("ai-teian-btn").addEventListener("click", function() {
+        messageInput.value += (messageInput.value ? " " : "") + "@AI_teian";
+        messageInput.focus();
+      });
 
     </script>
 
