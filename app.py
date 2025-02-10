@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()  # ← ここを追加！
+
 import os
 from extensions import app, db, socketio
 
@@ -37,6 +40,3 @@ if __name__ == "__main__":
     # Renderの環境変数 PORT を取得
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
-
-# Gunicorn 用のエントリポイント
-gunicorn_app = app  # ← これを追加！
