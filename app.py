@@ -29,8 +29,11 @@ app.register_blueprint(profile_bp)
 
 import routes
 
-if __name__ == '__main__':
+# 本番環境向けの修正
+if __name__ == "__main__":
     with app.app_context():
-        db.drop_all()  # 既存のテーブルを削除
-        db.create_all()  # 新しいスキーマでテーブル作成
-    socketio.run(app, debug=True)
+        db.create_all()  # 初回のみテーブル作成（drop_all() を削除）
+
+    # Renderの環境変数 PORT を取得
+    port = int(os.environ.get("PORT", 10000))
+    socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
