@@ -37,11 +37,25 @@ app.register_blueprint(profile_bp)
 import routes
 
 # 本番環境向けの修正
-if __name__ == "__main__":
-    with app.app_context():
-        db.drop_all()
-        db.create_all()  # 初回のみテーブル作成（drop_all() を削除）
+# if __name__ == "__main__":
+#     with app.app_context():
+#         db.drop_all()
+#         db.create_all()  # 初回のみテーブル作成（drop_all() を削除）
 
-    # Renderの環境変数 PORT を取得
+#     # Renderの環境変数 PORT を取得
+#     port = int(os.environ.get("PORT", 10000))
+#     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
+
+
+app.register_blueprint(profile_bp)
+
+import routes
+
+# __main__ に依存せずアプリ起動時にDB初期化する
+with app.app_context():
+    db.create_all()  # テーブルが存在しない場合のみ作成
+
+if __name__ == "__main__":
+    # Render環境では __main__ ブロックが実行されないので、ここには初期化処理を入れない
     port = int(os.environ.get("PORT", 10000))
     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
