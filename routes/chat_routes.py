@@ -210,26 +210,14 @@ def handle_send_message(data):
             pass
 
 def chat_message_to_dict(text):
-    matches = re.findall(r"\[(.*?)\]", text, re.DOTALL)
-    if not matches or len(matches) < 2:
-        return [], []
-    # 1つ目の角括弧：候補地名リスト
-    destinations = [d.strip() for d in matches[0].split(",")]
-    # 2つ目の角括弧：全説明文
-    explanation_text = matches[1].strip()
     result = []
     # 各候補地名に対して、候補地名の直後から次の候補地名までのテキストを抽出
-    for i, dest in enumerate(destinations):
-        if i < len(destinations) - 1:
-            next_dest = re.escape(destinations[i + 1])
-            pattern = re.compile(re.escape(dest) + r'\s*(.*?)\s*(?=' + next_dest + r')', re.DOTALL)
-        else:
-            pattern = re.compile(re.escape(dest) + r'\s*(.*)', re.DOTALL)
-        m = pattern.search(explanation_text)
-        if m:
-            result.append([dest, dest + m.group(1).strip()])
-        else:
-            result.append([dest, ""])
+    groups = re.findall(r"[(.*?)]", text, re.DOTALL)
+    print(groups)
+    for group in groups:
+        # 最初のカンマで分割（最大1回のみ分割）
+        parts = group.split(",", 1)
+        result.append(parts)
     return result
 
 
