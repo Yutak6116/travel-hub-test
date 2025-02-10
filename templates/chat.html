@@ -111,6 +111,11 @@
         />
         <button class="btn btn-primary" type="submit">送信</button>
       </form>
+      <!-- AI入力用ボタンの追加 -->
+      <div id="ai-button-panel" class="mt-2">
+        <button type="button" id="ai-plan-btn" class="btn btn-secondary">@AI_plan</button>
+        <button type="button" id="ai-teian-btn" class="btn btn-secondary">@AI_teian</button>
+      </div>
 
       <form
       action="{{ url_for('plan.confirm_plan', room_id=room.id) }}"
@@ -326,6 +331,17 @@
         chatBox.appendChild(messageElem);
         chatBox.scrollTop = chatBox.scrollHeight;
       });
+
+      // AI用ボタンのイベントを設定
+      document.getElementById("ai-plan-btn").addEventListener("click", function() {
+        messageInput.value += (messageInput.value ? " " : "") + "@AI_plan";
+        messageInput.focus();
+      });
+      document.getElementById("ai-teian-btn").addEventListener("click", function() {
+        messageInput.value += (messageInput.value ? " " : "") + "@AI_teian";
+        messageInput.focus();
+      });
+
     </script>
 
     
