@@ -71,7 +71,7 @@
             bottom: 0;
             right: 0;
             width: 50%;
-            height: 68%;
+            height: 75%;
             border: 1px solid #ddd;
             border-radius: 10px;
             overflow: hidden;
@@ -189,9 +189,8 @@
               data-likes="{{ site.like }}"
             >
               <strong>{{ site.place_name }}</strong>
-              | 概要: {{ site.description }}
-              | いいね: <span class="like-count">{{ site.like }}</span>
-              | コメント: {{ site.comments|length }}
+              | 概要: {{ site.description }}<br>
+              いいね: <span class="like-count">{{ site.like }}</span>
               <button
                 class="btn btn-sm like-btn"
                 data-siteid="{{ site.id }}"
@@ -240,6 +239,9 @@
               <button type="submit" id="addPlan" class="btn btn-primary">
                 追加
               </button>
+              <button type="button" id="refreshList" class="btn btn-secondary ms-2">
+                リスト更新
+              </button>
             </div>
           </form>
         </div>
@@ -263,6 +265,7 @@
               <button type="submit" class="btn btn-primary btn-sm">
                 追加
               </button>
+              
             </form>
           </div>
         </div>
@@ -389,7 +392,12 @@ $(function () {
 
     </script>
 
-    
+    <script>
+      // リスト更新ボタンのクリックでページを再読み込みする
+      document.getElementById("refreshList").addEventListener("click", function () {
+        location.reload();
+      });
+    </script>
 
     <script>
       // 詳細パネルの要素
