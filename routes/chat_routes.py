@@ -15,6 +15,7 @@ from flask_socketio import emit, join_room
 from extensions import db, socketio
 from models import ChatMessage, GroupInvitation, TravelGroup, AISuggest, User, CandidateSite
 from services.place_service import get_place_coordinates
+import requests
 
 chat_bp = Blueprint("chat", __name__)
 
@@ -77,60 +78,81 @@ def handle_send_message(data):
     db.session.commit()
     emit("receive_message", data, room=str(room))
 
-   #  todo: AIの返信を追加
-    if "@AI" in data.get("message", ""):
-        # まず「Loading」と表示
-        loading_msg = {"room": room, "user": "travel AI", "message": "Loading"}
+    # AIの返信処理
+    # ユーザーが送信したメッセージの先頭に "@AI" がある場合のみAIへの依頼とする
+    user_message = message.strip()
+    if user_message.startswith("@AI"):
+        # コマンド部分を取り除く
+        ai_prompt = user_message[len("@AI"):].strip()
+        # プロンプトが空の場合はデフォルトの指示を設定する (必要に応じて変更)
+        if not ai_prompt:
+            ai_prompt = "以下の会話をもとに旅行プランを提案してください。"
+        
+        # travel AIユーザーの存在確認と作成
         if User.query.filter_by(name="travel AI").first() is None:
             ai = User(name="travel AI")
+            db.session.add(ai)
+            db.session.commit()
+        else:
+            ai = User.query.filter_by(name="travel AI").first()
+
+        # Loadingメッセージを表示
+        loading_msg = {"room": room, "user": "travel AI", "message": "Loading"}
         emit("receive_message", loading_msg, room=str(room))
-        ai_loading = ChatMessage(username="travel AI", message="Loading", room_id=room)
+        ai_loading = ChatMessage(user_id=ai.id, username=ai.name, message="Loading", room_id=room)
         db.session.add(ai_loading)
         db.session.commit()
 
         # ルームのチャット履歴を取得（昇順）
-        conversation_objs = (
-            ChatMessage.query.filter_by(room_id=room).order_by(ChatMessage.id).all()
-        )
+        conversation_objs = ChatMessage.query.filter_by(room_id=room).order_by(ChatMessage.id).all()
         conversation = ""
         for m in conversation_objs:
             conversation += f"{m.username}: {m.message}\n"
 
-        # Cloud Function へPOSTリクエスト送信
+        # Cloud Function へPOSTリクエスト送信（プロンプトを利用する場合は適宜 conversation とマージする）
         response = requests.post(
-            "https://us-central1-goukan2house.cloudfunctions.net/travel_helper",
+            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
             headers={"Content-Type": "application/json"},
-            json={"conversation": conversation},
+            json={"conversation": conversation, "ai_prompt": ai_prompt},
         )
         if response.ok:
-            # JSONから候補の返信部分のみ抽出
             data_json = response.json()
             candidate_text = data_json["candidates"][0]["content"]["parts"][0]["text"]
-
             reply_text = candidate_text.strip()
+            
+            print(reply_text)
+            
             ai_data = {"room": room, "user": "travel AI", "message": reply_text}
             # DBに最終的なチャットメッセージとして保存
-            ai_msg = ChatMessage(username="travel AI", message=reply_text, room_id=room)
+            ai_msg = ChatMessage(user_id=ai.id, username=ai.name, message=reply_text, room_id=room)
             db.session.add(ai_msg)
             if "旅行プラン" in reply_text:
                 travel_plan = AISuggest(room_id=room, markdown=reply_text)
                 db.session.add(travel_plan)
-                destination, explanation = chat_message_to_dict(reply_text)
-                if destination:
-                    for i in len(destination):
-                        place_id = get_place_coordinates(destination[i])
-                        site = CandidateSite(
-                            user_id=user_id,
-                            place_name=destination[i],
-                            description=explanation[i],
+            db.session.commit()
+            emit("receive_message", ai_data, room=str(room))
+            
+            destination, explanation = chat_message_to_dict(reply_text)
+            if destination:
+                # 候補地を追加
+                for dest in destination:
+                    if not CandidateSite.query.filter_by(room_id=room, place_name=dest).first():
+                        place_id = get_place_coordinates(dest)
+                        candidate = CandidateSite(
+                            user_id=ai.id,
+                            place_name=dest,
+                            description=explanation,
                             room_id=room,
+                            enable=True,
                             place_id=place_id,
                         )
-                        db.session.add(site)
-            db.session.commit()
-            
-            
-            redirect(url_for("chat.chat", room_id=room))
+                        db.session.add(candidate)
+                        db.session.commit()
+                        candidate_site_dict = candidate.to_dict()
+                        emit("add_candidate_site", candidate_site_dict, room=str(room))
+                # 念のため最新候補地を再度送信
+                candidate_site_dict = candidate.to_dict()
+                emit("add_candidate_site", candidate_site_dict, room=str(room))
         else:
             # エラーハンドリング（必要に応じて）
             pass
