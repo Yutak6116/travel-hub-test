@@ -71,13 +71,20 @@
             bottom: 0;
             right: 0;
             width: 50%;
-            height: 68%;
+            height: 75%;
             border: 1px solid #ddd;
             border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             display: none; /* 初期状態は非表示 */
             z-index: 1000; /* 最前面に表示 */
+        }
+        .top-left-buttons {
+          position: fixed;
+          top: 10px;
+          left: 10px;
+          z-index: 1100;
+          color: blue;
         }
     </style>
 </head>
@@ -117,70 +124,60 @@
         <button type="button" id="ai-teian-btn" class="btn btn-secondary">@AI_teian</button>
       </div>
 
-      <form
-      action="{{ url_for('plan.confirm_plan', room_id=room.id) }}"
-      method="POST"
-      class="input-group mt-4"
-    >
-      <input
-        name="start_date"
-        placeholder="開始日（例: 2023-10-31）"
-        class="form-control"
-      />
-      <input
-        name="end_date"
-        placeholder="終了日（例: 2023-11-05）"
-        class="form-control"
-      />
-      <input
-        name="start_location"
-        placeholder="出発場所"
-        class="form-control"
-      />
-      <input
-        name="start_location"
-        placeholder="目的地"
-        class="form-control"
-      />
-      <input
-        name="budget"
-        placeholder="金額"
-        class="form-control"
-      />
-      <input
-        name="remarks"
-        placeholder="備考"
-        class="form-control"
-      />
-      <button type="submit" class="btn btn-info">AI呼び出し送信</button>
-    </form>
+      <!-- 簡単AI呼び出しセクション（デザインをchatの入力欄と統一） -->
+      <div class="input-group mt-4">
+        <!-- 日程を開始日・終了日に分割 -->
+        <input
+          id="aiStartDate"
+          type="text"
+          class="form-control"
+          placeholder="開始日（例: 2023-10-31）"
+        />
+        <input
+          id="aiEndDate"
+          type="text"
+          class="form-control"
+          placeholder="終了日（例: 2023-11-05）"
+        />
+        <input
+          id="aiDeparture"
+          type="text"
+          class="form-control"
+          placeholder="出発場所"
+        />
+        <input
+          id="aiDestination"
+          type="text"
+          class="form-control"
+          placeholder="目標場所"
+        />
+        <input
+          id="aiCost"
+          type="text"
+          class="form-control"
+          placeholder="金額"
+        />
+        <input
+          id="aiNote"
+          type="text"
+          class="form-control"
+          placeholder="備考"
+        />
+        <button id="aiCallBtn" class="btn btn-info">AI呼び出し送信</button>
+      </div>
+
 
         <!-- リンクボタン -->
-        <a
-          href="{{ url_for('group.travels') }}"
-          class="btn btn-secondary mt-3"
-        >
+  <!-- 左上に表示するボタン -->
+      <div class="top-left-buttons">
+        <a href="{{ url_for('group.travels') }}" class="btn btn-secondary">
           旅行一覧へ
         </a>
+    </button>
+  </div>
+      <div class="tab-container">
         <button id="toggle-map-btn" class="btn btn-info mt-3">地図の表示/非表示</button>
 
-        <!-- グループ招待フォーム -->
-        <div class="invite-section mt-3">
-          <h5>グループ招待</h5>
-          <form id="inviteForm">
-            <div class="input-group">
-              <input
-                type="email"
-                class="form-control"
-                placeholder="招待するメールアドレス"
-                id="inviteEmail"
-                required
-              />
-              <button type="submit" class="btn btn-primary">招待を送る</button>
-            </div>
-          </form>
-          <div id="inviteMessage" class="mt-2"></div>
-        </div>
       </div>
 
       <!-- 候補地一覧＋詳細表示 (2カラム) -->
@@ -198,8 +195,8 @@
               data-likes="{{ site.like }}"
             >
               <strong>{{ site.place_name }}</strong>
-              | いいね: <span class="like-count">{{ site.like }}</span>
-              | コメント: {{ site.comments|length }}
+              | 概要: {{ site.description }}<br>
+              いいね: <span class="like-count">{{ site.like }}</span>
               <button
                 class="btn btn-sm like-btn"
                 data-siteid="{{ site.id }}"
@@ -208,12 +205,12 @@
               >
                 ♥
               </button>
-              <!--<form
+              <form
                 action="{{ url_for('plan.delete_plan_item', room_id=room.id, site_id=site.id) }}"
                 method="POST"
                 style="display:inline;"
               >
-                <button type="submit" class="btn btn-sm btn-danger float-end">✖</button>-->
+                <button type="submit" class="btn btn-sm btn-danger float-end">✖</button>
               </form>
             </li>
             {% endfor %}
@@ -274,6 +271,7 @@
               <button type="submit" class="btn btn-primary btn-sm">
                 追加
               </button>
+              
             </form>
           </div>
         </div>
@@ -358,7 +356,7 @@
         location.reload();
       });
     </script>
-    
+
     <script>
       // 詳細パネルの要素
       const siteDetail = document.getElementById("siteDetail");

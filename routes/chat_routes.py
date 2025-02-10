@@ -82,7 +82,6 @@ def handle_send_message(data):
     # AIの返信処理
     # ユーザーが送信したメッセージの先頭に "@AI" がある場合のみAIへの依頼とする
     user_message = message.strip()
-
     if user_message.startswith("@AI_plan"):
         # コマンド部分を取り除く
         ai_prompt = user_message[len("@AI_plan"):].strip()
@@ -113,7 +112,7 @@ def handle_send_message(data):
 
         # Cloud Function へPOSTリクエスト送信（プロンプトを利用する場合は適宜 conversation とマージする）
         response = requests.post(
-            "https://us-central1-goukan2house.cloudfunctions.net/travel_helper",
+            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
             headers={"Content-Type": "application/json"},
             json={"conversation": conversation, "ai_prompt": ai_prompt},
         )
