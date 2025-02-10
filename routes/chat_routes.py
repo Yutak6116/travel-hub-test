@@ -112,7 +112,7 @@ def handle_send_message(data):
 
         # Cloud Function へPOSTリクエスト送信（プロンプトを利用する場合は適宜 conversation とマージする）
         response = requests.post(
-            "https://us-central1-goukan2house.cloudfunctions.net/teian_help",
+            "https://us-central1-goukan2house.cloudfunctions.net/travel_helper",
             headers={"Content-Type": "application/json"},
             json={"conversation": conversation, "ai_prompt": ai_prompt},
         )
