@@ -212,14 +212,13 @@ def handle_send_message(data):
 def chat_message_to_dict(text):
     result = []
     # 各候補地名に対して、候補地名の直後から次の候補地名までのテキストを抽出
-    groups = re.findall(r"[(.*?)]", text, re.DOTALL)
+    groups = re.findall(r"\[(.*?)\]", text, re.DOTALL)
     print(groups)
     for group in groups:
         # 最初のカンマで分割（最大1回のみ分割）
         parts = group.split(",", 1)
         result.append(parts)
     return result
-
 
 @chat_bp.route("/invite/<int:room_id>", methods=["POST"])
 def chat_invite(room_id):
