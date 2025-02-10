@@ -46,11 +46,6 @@ import routes
 #     port = int(os.environ.get("PORT", 10000))
 #     socketio.run(app, host="0.0.0.0", port=port, allow_unsafe_werkzeug=True)
 
-
-app.register_blueprint(profile_bp)
-
-import routes
-
 # __main__ に依存せずアプリ起動時にDB初期化する
 with app.app_context():
     db.create_all()  # テーブルが存在しない場合のみ作成
