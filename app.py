@@ -35,6 +35,7 @@ import routes
 # 本番環境向けの修正
 if __name__ == "__main__":
     with app.app_context():
+        db.drop_all()
         db.create_all()  # 初回のみテーブル作成（drop_all() を削除）
 
     # Renderの環境変数 PORT を取得
