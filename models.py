@@ -112,11 +112,11 @@ class CandidateSite(db.Model):
             if field in data:
                 setattr(self, field, data[field])
 
-    # def add_comment(self, comment: "Comment"):
-    #     self.comments.append(comment)
+    def add_comment(self, comment: "Comment"):
+        self.comments.append(comment)
 
-    # def delete_comment(self, comment: "Comment"):
-    #     self.comments.remove(comment)
+    def delete_comment(self, comment: "Comment"):
+        self.comments.remove(comment)
 
     def add_like(self):
         self.like += 1
@@ -170,12 +170,13 @@ class Comment(db.Model):
 class AcceptedSchedule(db.Model):
     __tablename__ = "accepted_schedule"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    site_id: Mapped[int] = mapped_column(
-        db.Integer, db.ForeignKey("candidate_site.id"), nullable=False
+    place_id: Mapped[int] = mapped_column(
+        db.Integer, db.ForeignKey("candidate_site.place_id"), nullable=False
     )
     room_id: Mapped[int] = mapped_column(
         db.Integer, db.ForeignKey("travel_group.id"), nullable=False
     )
+    place_name: Mapped[str] = mapped_column(db.String(100), nullable=False)
     date: Mapped[int] = mapped_column(db.Integer, nullable=False)  # 0-indexed
     order: Mapped[int] = mapped_column(db.Integer, nullable=False)  # 0-indexed
 
