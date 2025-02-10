@@ -347,8 +347,13 @@
 
     </script>
 
+    <script>
+      // リスト更新ボタンのクリックでページを再読み込みする
+      document.getElementById("refreshList").addEventListener("click", function () {
+        location.reload();
+      });
+    </script>
     
-
     <script>
       // 詳細パネルの要素
       const siteDetail = document.getElementById("siteDetail");
