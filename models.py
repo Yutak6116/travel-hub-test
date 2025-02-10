@@ -42,7 +42,6 @@ class TravelGroup(db.Model):
 class GroupInvitation(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey("travel_group.id"), nullable=False)
-    inviting_user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
     invited_email = db.Column(db.String(100), nullable=False)
     status = db.Column(
         db.String(20), nullable=False, default="pending"
