@@ -73,7 +73,8 @@ def handle_send_message(data):
     room = data.get("room")
     message = data.get("message")
     user_id = session.get("user_id")
-    msg = ChatMessage(user_id=user_id, message=message, room_id=room)
+    username = session.get("name")
+    msg = ChatMessage(user_id=user_id, username=username, message=message, room_id=room)
     db.session.add(msg)
     db.session.commit()
     emit("receive_message", data, room=str(room))
@@ -132,10 +133,11 @@ def handle_send_message(data):
             db.session.commit()
             emit("receive_message", ai_data, room=str(room))
             
-            destination, explanation = chat_message_to_dict(reply_text)
-            if destination:
+            destination_explanation = chat_message_to_dict(reply_text)
+            if destination_explanation:
                 # 候補地を追加
-                for dest in destination:
+                for i in range(len(destination_explanation)):
+                    dest, explanation = destination_explanation[i]
                     if not CandidateSite.query.filter_by(room_id=room, place_name=dest).first():
                         place_id = get_place_coordinates(dest)
                         candidate = CandidateSite(
@@ -159,13 +161,26 @@ def handle_send_message(data):
 
 def chat_message_to_dict(text):
     matches = re.findall(r"\[(.*?)\]", text, re.DOTALL)
-    if matches and len(matches) >= 2:
-        # 1つ目の角括弧の中身をカンマで分割してリスト化
-        destinations = [d.strip() for d in matches[0].split(",")]
-        explanations = matches[1]
-        return destinations, explanations
-    else:
-        return []
+    if not matches or len(matches) < 2:
+        return [], []
+    # 1つ目の角括弧：候補地名リスト
+    destinations = [d.strip() for d in matches[0].split(",")]
+    # 2つ目の角括弧：全説明文
+    explanation_text = matches[1].strip()
+    result = []
+    # 各候補地名に対して、候補地名の直後から次の候補地名までのテキストを抽出
+    for i, dest in enumerate(destinations):
+        if i < len(destinations) - 1:
+            next_dest = re.escape(destinations[i + 1])
+            pattern = re.compile(re.escape(dest) + r'\s*(.*?)\s*(?=' + next_dest + r')', re.DOTALL)
+        else:
+            pattern = re.compile(re.escape(dest) + r'\s*(.*)', re.DOTALL)
+        m = pattern.search(explanation_text)
+        if m:
+            result.append([dest, dest + m.group(1).strip()])
+        else:
+            result.append([dest, ""])
+    return result
 
 
 @chat_bp.route("/invite/<int:room_id>", methods=["POST"])
